@@ -75,7 +75,7 @@ impl From<EnvValue> for String {
 }
 
 
-/// Creates new public 'cfg' mod with function fo get each environment variable of mapping.
+/// Creates new public mod with function fo get each environment variable of mapping.
 ///
 /// All variables are required and program will panic if some variables haven't value, but you
 /// can add default value for specific variable.
@@ -88,7 +88,6 @@ impl From<EnvValue> for String {
 /// config! {
 ///     DATABASE_URL: String,
 /// }
-///
 /// # fn main () {}
 /// ```
 ///
@@ -100,9 +99,22 @@ impl From<EnvValue> for String {
 ///     DATABASE_URL: String,
 ///     HOST: String => "127.0.0.1".to_string(),
 /// }
-///
 /// # fn main () {}
 /// ```
+///
+/// By default itconfig lib creates module with 'cfg' name. But you can use simple meta instruction
+/// if you want to rename module. In the example below we renamed module to 'configuration'
+///
+/// ```rust
+/// # #[macro_use] extern crate itconfig;
+/// config! {
+///     #![mod_name = configuration];
+///
+///     DEBUG: bool,
+/// }
+/// # fn main () {}
+/// ```
+///
 ///
 /// This module will also contain helper method:
 ///
