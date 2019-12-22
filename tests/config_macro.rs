@@ -109,3 +109,15 @@ fn convert_number_value_from_env() {
     assert_eq!(cfg::F32(), 10.0);
     assert_eq!(cfg::F64(), 10.0);
 }
+
+
+#[test]
+fn change_config_module_name() {
+    config! {
+        #![mod_name = custom_config_name];
+
+        DEBUG: bool => true,
+    }
+
+    assert_eq!(custom_config_name::DEBUG(), true);
+}

@@ -131,16 +131,16 @@ impl From<EnvValue> for String {
 #[macro_export]
 macro_rules! config {
     ($($tokens:tt)*) => {
-        __config_parse_variables!(
+        __itconfig_parse_module! {
             tokens = [$($tokens)*],
-            variables = [],
-        );
+            name = cfg,
+        }
     }
 }
 
 #[macro_export]
 #[doc(hidden)]
-macro_rules! __invalid_config_syntax {
+macro_rules! __itconfig_invalid_syntax {
     () => {
         compile_error!(
             "Invalid `config!` syntax. Please see the `config!` macro docs for more info."
@@ -148,11 +148,48 @@ macro_rules! __invalid_config_syntax {
     };
 }
 
+#[macro_export]
+#[doc(hidden)]
+macro_rules! __itconfig_parse_module {
+    // Find module name
+    (
+        tokens = [
+            #![mod_name = $mod_name:ident];
+            $($rest:tt)*
+        ],
+        name = $ignore:tt,
+    ) => {
+        __itconfig_parse_module! {
+            tokens = [$($rest)*],
+            name = $mod_name,
+        }
+    };
+
+    // Done parsing module
+    (
+        tokens = $tokens:tt,
+        name = $name:tt,
+    ) => {
+        __itconfig_parse_variables! {
+            tokens = $tokens,
+            variables = [],
+            module = {
+                name = $name,
+            },
+        }
+    };
+
+    // Invalid syntax
+    ($($tokens:tt)*) => {
+        __itconfig_invalid_syntax!();
+    };
+}
+
 
 #[macro_export]
 #[doc(hidden)]
-macro_rules! __config_parse_variables {
-    // Find general config of variable
+macro_rules! __itconfig_parse_variables {
+    // Find variable with default value
     (
         tokens = [
             $name:ident : $ty:ty => $default:expr,
@@ -160,7 +197,7 @@ macro_rules! __config_parse_variables {
         ],
         $($args:tt)*
     ) => {
-        __config_parse_variables!(
+        __itconfig_parse_variables! {
             current_variable = {
                 name = $name,
                 ty = $ty,
@@ -169,9 +206,10 @@ macro_rules! __config_parse_variables {
             },
             tokens = [$($rest)*],
             $($args)*
-        );
+        }
     };
 
+    // Find variable without default value
     (
         tokens = [
             $name:ident : $ty:ty,
@@ -179,7 +217,7 @@ macro_rules! __config_parse_variables {
         ],
         $($args:tt)*
     ) => {
-        __config_parse_variables!(
+        __itconfig_parse_variables! {
             current_variable = {
                 name = $name,
                 ty = $ty,
@@ -187,7 +225,7 @@ macro_rules! __config_parse_variables {
             },
             tokens = [$($rest)*],
             $($args)*
-        );
+        }
     };
 
     // Done parsing variable
@@ -199,10 +237,11 @@ macro_rules! __config_parse_variables {
         variables = [$($variables:tt,)*],
         $($args:tt)*
     ) => {
-        __config_parse_variables!(
+        __itconfig_parse_variables! {
             tokens = $tokens,
             variables = [$($variables,)* { $($current_variable)* },],
-        );
+            $($args)*
+        }
     };
 
     // Done parsing all variables
@@ -215,7 +254,7 @@ macro_rules! __config_parse_variables {
 
     // Invalid syntax
     ($($tokens:tt)*) => {
-        __invalid_config_syntax!();
+        __itconfig_invalid_syntax!();
     };
 }
 
@@ -228,8 +267,11 @@ macro_rules! __config_impl {
             name = $name:ident,
             $($variable:tt)*
         },)+],
+        module = {
+            name = $mod_name:ident,
+        },
     ) => {
-        pub mod cfg {
+        pub mod $mod_name {
             #![allow(non_snake_case)]
             use std::env;
             use $crate::EnvValue;
