@@ -3,23 +3,23 @@
 //! Simple configuration with macro for rust application.
 //!
 //!
-//!
 //! ## Example usage
 //!
-//! ```
+//! ```rust
 //! #[macro_use] extern crate itconfig;
-//! use dotenv::dotenv;
+//! // use dotenv::dotenv;
 //!
 //! config! {
-//!     DATABASE_URL: bool,
-//!     HOST: String => "127.0.0.1",
+//!     DEBUG: bool => true,
+//!     HOST: String => "127.0.0.1".to_string(),
 //! }
 //!
 //! fn main () {
-//!     dotenv().ok();
+//!     // dotenv().ok();
 //!     cfg::init();
-//!     assert_eq(cfg::HOST(), String::from("127.0.0.1");
+//!     assert_eq!(cfg::HOST(), String::from("127.0.0.1"));
 //! }
+//! ```
 
 #[doc(hidden)]
 macro_rules! __impl_from_for_numbers {
@@ -86,16 +86,10 @@ impl From<EnvValue> for String {
 /// ```rust
 /// # #[macro_use] extern crate itconfig;
 /// config! {
-///     DATABASE_URL: bool,
+///     DATABASE_URL: String,
 /// }
 ///
-/// # fn main () {
-/// #     use std::env;
-/// #     env::set_var("DATABASE_URL", "sqlite://");
-/// #
-/// #     cfg::init();
-/// #     assert_eq(cfg::DATABASE_URL(), true);
-/// # }
+/// # fn main () {}
 /// ```
 ///
 /// Config with default value
@@ -103,14 +97,11 @@ impl From<EnvValue> for String {
 /// ```rust
 /// # #[macro_use] extern crate itconfig;
 /// config! {
-///     DATABASE_URL: bool,
-///     HOST: String => "127.0.0.1",
+///     DATABASE_URL: String,
+///     HOST: String => "127.0.0.1".to_string(),
 /// }
 ///
-/// # fn main () {
-/// #     cfg::init();
-/// #     assert_eq(cfg::HOST(), String::from("127.0.0.1");
-/// # }
+/// # fn main () {}
 /// ```
 ///
 /// This module will also contain helper method:
@@ -123,33 +114,17 @@ impl From<EnvValue> for String {
 ///
 /// ```rust
 /// #[macro_use] extern crate itconfig;
+/// // use dotenv::dotenv;
 ///
 /// config! {
-///     DATABASE_URL: bool,
-///     HOST: String => "127.0.0.1",
+///     DEBUG: bool => true,
+///     HOST: String => "127.0.0.1".to_string(),
 /// }
 ///
 /// fn main () {
+///     // dotenv().ok();
 ///     cfg::init();
-///     assert_eq(cfg::HOST(), String::from("127.0.0.1");
-/// }
-/// ```
-///
-/// Also dotenv module is supported
-///
-/// ```rust
-/// #[macro_use] extern crate itconfig;
-/// use dotenv::dotenv;
-///
-/// config! {
-///     DATABASE_URL: bool,
-///     HOST: String => "127.0.0.1",
-/// }
-///
-/// fn main () {
-///     dotenv().ok();
-///     cfg::init();
-///     assert_eq(cfg::HOST(), String::from("127.0.0.1");
+///     assert_eq!(cfg::HOST(), String::from("127.0.0.1"));
 /// }
 /// ```
 ///

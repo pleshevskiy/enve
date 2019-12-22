@@ -1,6 +1,6 @@
 use std::env;
 #[macro_use]
-extern crate it_config;
+extern crate itconfig;
 
 #[test]
 fn one_variable() {
