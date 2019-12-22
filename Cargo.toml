@@ -1,0 +1,17 @@
+[package]
+name = "itconfig"
+version = "0.1.1"
+authors = ["Dmitriy Pleshevskiy <dmitriy@ideascup.me>"]
+description = "Easy build a configs from environment variables and use it in globally."
+categories = ["config", "web-programming"]
+keywords = ["config", "env", "macro", "configuration", "environment"]
+edition = "2018"
+license = "MIT"
+repository = "https://github.com/icetemple/itconfig-rs"
+homepage = "https://github.com/icetemple/itconfig-rs"
+documentation = "https://docs.rs/itconfig"
+readme = "README.md"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]

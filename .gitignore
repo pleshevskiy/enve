@@ -1,0 +1,7 @@
+.idea/
+
+/target
+Cargo.lock
+
+src/main.rs
+.env*
