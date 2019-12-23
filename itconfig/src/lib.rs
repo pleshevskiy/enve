@@ -108,7 +108,7 @@ impl From<EnvValue> for String {
 /// ```rust
 /// # #[macro_use] extern crate itconfig;
 /// config! {
-///     #![mod_name = configuration];
+///     #![mod_name = configuration]
 ///
 ///     DEBUG: bool,
 /// }
@@ -166,7 +166,7 @@ macro_rules! __itconfig_parse_module {
     // Find module name
     (
         tokens = [
-            #![mod_name = $mod_name:ident];
+            #![mod_name = $mod_name:ident]
             $($rest:tt)*
         ],
         name = $ignore:tt,

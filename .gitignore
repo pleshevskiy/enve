@@ -3,5 +3,5 @@
 /target
 Cargo.lock
 
-src/main.rs
+itconfig/src/main.rs
 .env*

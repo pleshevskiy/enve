@@ -114,7 +114,7 @@ fn convert_number_value_from_env() {
 #[test]
 fn change_config_module_name() {
     config! {
-        #![mod_name = custom_config_name];
+        #![mod_name = custom_config_name]
 
         DEBUG: bool => true,
     }
