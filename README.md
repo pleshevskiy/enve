@@ -1,6 +1,6 @@
 # itconfig
 
-Simple configuration with macro for rust application.
+Easy build a configs from environment variables and use it in globally.
 
 We recommend you start with the [documentation].
 
