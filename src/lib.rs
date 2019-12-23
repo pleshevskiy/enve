@@ -261,7 +261,7 @@ macro_rules! __itconfig_parse_variables {
         tokens = [],
         $($args:tt)*
     ) => {
-        __config_impl!($($args)*);
+        __itconfig_impl!($($args)*);
     };
 
     // Invalid syntax
@@ -273,7 +273,7 @@ macro_rules! __itconfig_parse_variables {
 
 #[macro_export]
 #[doc(hidden)]
-macro_rules! __config_impl {
+macro_rules! __itconfig_impl {
     (
         variables = [$({
             name = $name:ident,
@@ -292,7 +292,7 @@ macro_rules! __config_impl {
                 $($name();)+
             }
 
-            $(__config_variable! {
+            $(__itconfig_variable! {
                 name = $name,
                 $($variable)*
             })+
@@ -303,7 +303,7 @@ macro_rules! __config_impl {
 
 #[macro_export]
 #[doc(hidden)]
-macro_rules! __config_variable {
+macro_rules! __itconfig_variable {
     // Add method with default value
     (
         name = $name:ident,
