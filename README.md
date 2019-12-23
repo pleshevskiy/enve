@@ -13,7 +13,7 @@ use dotenv::dotenv;
 
 config! {
     DATABASE_URL: bool,
-    HOST: String => "127.0.0.1",
+    HOST: String => "127.0.0.1".to_string(),
 }
 
 fn main () {
