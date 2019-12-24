@@ -39,7 +39,7 @@ macro_rules! __impl_from_for_numbers {
 
 #[derive(Debug)]
 #[doc(hidden)]
-pub struct EnvValue(String);
+struct EnvValue(String);
 
 impl EnvValue {
     pub fn new(string: String) -> Self {
