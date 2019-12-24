@@ -1,5 +1,7 @@
 # itconfig
 
+[![Documentation](https://docs.rs/itconfig/badge.svg?version=0.2.3)](https://docs.rs/itconfig)
+
 Easy build a configs from environment variables and use it in globally.
 
 We recommend you start with the [documentation].
@@ -12,7 +14,7 @@ We recommend you start with the [documentation].
 use dotenv::dotenv;
 
 config! {
-    DATABASE_URL: bool,
+    DEBUG: bool => true,
     HOST: String => "127.0.0.1".to_string(),
 }
 
@@ -23,5 +25,29 @@ fn main () {
 }
 ```
 
+## Running tests
+
+```bash
+cargo test
+```
+
+
+## Roadmap
+
+* [ ] Add namespace for variables
+* [ ] Custom env name
+* [ ] Add if condition for feature variables
+
+
+## License
+
+[MIT] © [Ice Temple](https://github.com/icetemple)
+
+
+## Contributors
+
+[pleshevskiy](https://github.com/pleshevskiy) (Dmitriy Pleshevskiy) – creator, maintainer.
+
 
 [documentation]: https://docs.rs/itconfig
+[MIT]: https://github.com/icetemple/itconfig-rs/blob/master/LICENSE
