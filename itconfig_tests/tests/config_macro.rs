@@ -5,41 +5,69 @@ use std::env;
 #[macro_use]
 extern crate itconfig;
 
+
+#[test]
+#[should_panic]
+fn should_panic_if_miss_env_variable() {
+    config! {
+        MISS_VARIABLE: bool,
+    }
+
+    cfg::init();
+}
+
+
 #[test]
 fn one_variable() {
+    env::set_var("DEBUG", "t");
+
+    config! {
+        DEBUG: bool,
+    }
+
+    cfg::init();
+    assert_eq!(cfg::DEBUG(), true);
+    env::remove_var("DEBUG");
+}
+
+#[test]
+fn one_variable_with_default_value() {
     config! {
         DEBUG: bool => true,
     }
 
+    cfg::init();
     assert_eq!(cfg::DEBUG(), true);
 }
 
 #[test]
-fn few_variables() {
+fn few_variables_with_default_value() {
     config! {
         FOO: bool => true,
         BAR: bool => false,
     }
 
+    cfg::init();
     assert_eq!(cfg::FOO(), true);
     assert_eq!(cfg::BAR(), false);
 }
 
 #[test]
-fn different_types() {
+fn different_types_with_default_value() {
     config! {
         NUMBER: i32 => 30,
         BOOL: bool => true,
         STRING: String => "string".to_string(),
     }
 
+    cfg::init();
     assert_eq!(cfg::NUMBER(), 30);
     assert_eq!(cfg::BOOL(), true);
     assert_eq!(cfg::STRING(), "string");
 }
 
 #[test]
-fn convert_bool_type_from_env() {
+fn convert_bool_type_value_from_env() {
     env::set_var("T_BOOL", "t");
     env::set_var("TRUE_BOOL", "true");
     env::set_var("NUM_BOOL", "1");
@@ -57,6 +85,7 @@ fn convert_bool_type_from_env() {
 
     }
 
+    cfg::init();
     assert_eq!(cfg::T_BOOL(), true);
     assert_eq!(cfg::TRUE_BOOL(), true);
     assert_eq!(cfg::NUM_BOOL(), true);
@@ -66,7 +95,7 @@ fn convert_bool_type_from_env() {
 }
 
 #[test]
-fn convert_number_value_from_env() {
+fn convert_number_type_value_from_env() {
     env::set_var("I8", "10");
     env::set_var("I16", "10");
     env::set_var("I32", "10");
@@ -99,6 +128,7 @@ fn convert_number_value_from_env() {
         F64: f64,
     }
 
+    cfg::init();
     assert_eq!(cfg::I8(), 10);
     assert_eq!(cfg::I16(), 10);
     assert_eq!(cfg::I32(), 10);
@@ -115,19 +145,20 @@ fn convert_number_value_from_env() {
 
 
 #[test]
-fn change_config_module_name() {
+fn change_configuration_module_name() {
     config! {
         #![mod_name = custom_config_name]
 
         DEBUG: bool => true,
     }
 
+    custom_config_name::init();
     assert_eq!(custom_config_name::DEBUG(), true);
 }
 
 
 #[test]
-fn config_namespace() {
+fn configuration_with_namespace() {
     env::set_var("POSTGRES_HOST", "t");
 
     config! {
@@ -142,24 +173,29 @@ fn config_namespace() {
         APP {}
     }
 
+    cfg::init();
     assert_eq!(cfg::DEBUG(), true);
     assert_eq!(cfg::POSTGRES::HOST(), true);
+    env::remove_var("POSTGRES_HOST");
 }
 
 
 #[test]
-fn config_in_lowercase() {
-    env::set_var("DEBUG", "t");
+fn configuration_variables_and_namespace_in_lowercase() {
+    env::set_var("TESTING", "t");
     env::set_var("NAMESPACE_FOO", "t");
 
     config! {
-        debug: bool,
+        testing: bool,
 
         namespace {
             foo: bool,
         }
     }
 
-    assert_eq!(cfg::debug(), true);
+    cfg::init();
+    assert_eq!(cfg::testing(), true);
     assert_eq!(cfg::namespace::foo(), true);
+    env::remove_var("TESTING");
+    env::remove_var("NAMESPACE_FOO");
 }
