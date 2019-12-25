@@ -1,6 +1,6 @@
 # itconfig
 
-[![Documentation](https://docs.rs/itconfig/badge.svg?version=0.2.3)](https://docs.rs/itconfig)
+[![Documentation](https://docs.rs/itconfig/badge.svg)](https://docs.rs/itconfig)
 
 Easy build a configs from environment variables and use it in globally.
 
