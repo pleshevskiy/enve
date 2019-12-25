@@ -177,12 +177,14 @@ macro_rules! config {
     }
 }
 
+
 #[macro_export]
 #[doc(hidden)]
 macro_rules! __itconfig_invalid_syntax {
     () => {
         compile_error!(
-            "Invalid `config!` syntax. Please see the `config!` macro docs for more info."
+            "Invalid `config!` syntax. Please see the `config!` macro docs for more info.\
+            `https://docs.rs/itconfig/latest/itconfig/macro.config.html`"
         );
     };
 }
