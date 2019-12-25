@@ -39,7 +39,7 @@ cargo test
 
 ## Roadmap
 
-* [ ] Add namespace for variables
+* [x] Add namespace for variables
 * [ ] Custom env name
 * [ ] Add if condition for feature variables
 
