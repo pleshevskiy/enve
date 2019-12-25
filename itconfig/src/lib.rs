@@ -262,7 +262,6 @@ macro_rules! __itconfig_parse_variables {
             current_variable = {
                 name = $name,
                 ty = $ty,
-                env_name = stringify!($name),
                 default = $default,
             },
             tokens = [$($rest)*],
@@ -282,7 +281,6 @@ macro_rules! __itconfig_parse_variables {
             current_variable = {
                 name = $name,
                 ty = $ty,
-                env_name = stringify!($name),
             },
             tokens = [$($rest)*],
             $($args)*
@@ -379,8 +377,8 @@ macro_rules! __itconfig_impl {
 
                     $(__itconfig_variable! {
                         name = $ns_var_name,
+                        env_name = concat!(stringify!($ns_name), "_", stringify!($ns_var_name)),
                         $($ns_variables)*
-                        env_prefix = concat!(stringify!($ns_name), "_"),
                     })*
                 }
             )*
@@ -393,8 +391,8 @@ macro_rules! __itconfig_impl {
 
             $(__itconfig_variable! {
                 name = $var_name,
+                env_name = stringify!($var_name),
                 $($variable)*
-                env_prefix = "",
             })*
         }
     };
@@ -412,13 +410,12 @@ macro_rules! __itconfig_variable {
     // Add method with default value
     (
         name = $name:ident,
-        ty = $ty:ty,
         env_name = $env_name:expr,
+        ty = $ty:ty,
         default = $default:expr,
-        env_prefix = $env_prefix:expr,
     ) => {
         pub fn $name() -> $ty {
-            env::var(concat!($env_prefix, $env_name))
+            env::var($env_name.to_uppercase())
                 .map(|val| EnvValue::from(val).into())
                 .unwrap_or_else(|_| $default)
         }
@@ -427,16 +424,15 @@ macro_rules! __itconfig_variable {
     // Add method without default value
     (
         name = $name:ident,
-        ty = $ty:ty,
         env_name = $env_name:expr,
-        env_prefix = $env_prefix:expr,
+        ty = $ty:ty,
     ) => {
         pub fn $name() -> $ty {
-            env::var(concat!($env_prefix, $env_name))
+            env::var($env_name.to_uppercase())
                 .map(|val| EnvValue::from(val).into())
                 .unwrap_or_else(|_| {
                     panic!(format!(r#"Cannot read "{}" environment variable"#,
-                                   concat!($env_prefix, $env_name)))
+                                   $env_name.to_uppercase()))
                 })
 
         }

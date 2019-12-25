@@ -128,16 +128,38 @@ fn change_config_module_name() {
 
 #[test]
 fn config_namespace() {
+    env::set_var("POSTGRES_HOST", "t");
+
     config! {
         DEBUG: bool => true,
 
         POSTGRES {
-            HOST: bool => true,
+            HOST: bool,
             PORT: bool => true,
             USERNAME: bool => true,
         }
+
+        APP {}
     }
 
     assert_eq!(cfg::DEBUG(), true);
     assert_eq!(cfg::POSTGRES::HOST(), true);
+}
+
+
+#[test]
+fn config_in_lowercase() {
+    env::set_var("DEBUG", "t");
+    env::set_var("NAMESPACE_FOO", "t");
+
+    config! {
+        debug: bool,
+
+        namespace {
+            foo: bool,
+        }
+    }
+
+    assert_eq!(cfg::debug(), true);
+    assert_eq!(cfg::namespace::foo(), true);
 }
