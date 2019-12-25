@@ -407,6 +407,21 @@ macro_rules! __itconfig_impl {
 #[macro_export]
 #[doc(hidden)]
 macro_rules! __itconfig_variable {
+    // Add method without default value
+    (
+        name = $name:ident,
+        env_name = $env_name:expr,
+        ty = $ty:ty,
+    ) => {
+        __itconfig_variable! {
+            name = $name,
+            env_name = $env_name,
+            ty = $ty,
+            default = panic!(format!(r#"Cannot read "{}" environment variable"#,
+                                     $env_name.to_uppercase())),
+        }
+    };
+
     // Add method with default value
     (
         name = $name:ident,
@@ -418,23 +433,6 @@ macro_rules! __itconfig_variable {
             env::var($env_name.to_uppercase())
                 .map(|val| EnvValue::from(val).into())
                 .unwrap_or_else(|_| $default)
-        }
-    };
-
-    // Add method without default value
-    (
-        name = $name:ident,
-        env_name = $env_name:expr,
-        ty = $ty:ty,
-    ) => {
-        pub fn $name() -> $ty {
-            env::var($env_name.to_uppercase())
-                .map(|val| EnvValue::from(val).into())
-                .unwrap_or_else(|_| {
-                    panic!(format!(r#"Cannot read "{}" environment variable"#,
-                                   $env_name.to_uppercase()))
-                })
-
         }
     };
 
