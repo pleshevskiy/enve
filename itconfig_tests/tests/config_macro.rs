@@ -1,4 +1,7 @@
+#![feature(trace_macros)]
+
 use std::env;
+
 #[macro_use]
 extern crate itconfig;
 
@@ -120,4 +123,21 @@ fn change_config_module_name() {
     }
 
     assert_eq!(custom_config_name::DEBUG(), true);
+}
+
+
+#[test]
+fn config_namespace() {
+    config! {
+        DEBUG: bool => true,
+
+        POSTGRES {
+            HOST: bool => true,
+            PORT: bool => true,
+            USERNAME: bool => true,
+        }
+    }
+
+    assert_eq!(cfg::DEBUG(), true);
+    assert_eq!(cfg::POSTGRES::HOST(), true);
 }
