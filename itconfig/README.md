@@ -24,7 +24,7 @@ config! {
 fn main () {
     // dotenv().ok();
     cfg::init();
-    assert_eq(cfg::HOST(), String::from("127.0.0.1");
+    assert_eq(cfg::HOST(), String::from("127.0.0.1"));
 }
 ```
 
