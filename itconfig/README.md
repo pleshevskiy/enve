@@ -14,6 +14,11 @@ We recommend you start with the [documentation].
 config! {
     DEBUG: bool => true,
     HOST: String => "127.0.0.1".to_string(),
+    
+    NAMESPACE {
+        FOO: bool => true,
+        BAR: i32 => 10,
+    }
 }
 
 fn main () {
