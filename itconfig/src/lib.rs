@@ -23,9 +23,7 @@
 
 #[doc(hidden)]
 macro_rules! __impl_from_for_numbers {
-    (
-        $($ty:ty),+
-    ) => {
+    ($($ty:ty),+) => {
         $(
             impl From<EnvValue> for $ty {
                 fn from(env: EnvValue) -> Self {
@@ -39,13 +37,7 @@ macro_rules! __impl_from_for_numbers {
 
 #[derive(Debug)]
 #[doc(hidden)]
-struct EnvValue(String);
-
-impl EnvValue {
-    pub fn new(string: String) -> Self {
-        Self(string)
-    }
-}
+pub struct EnvValue(String);
 
 __impl_from_for_numbers![
     i8, i16, i32, i64, i128, isize,
@@ -85,21 +77,25 @@ impl From<EnvValue> for String {
 ///
 /// ```rust
 /// # #[macro_use] extern crate itconfig;
+/// # use std::env;
+/// # env::set_var("DATABASE_URL", "postgres://u:p@localhost:5432/db");
 /// config! {
 ///     DATABASE_URL: String,
 /// }
-/// # fn main () {}
+/// # cfg::init()
 /// ```
 ///
 /// Config with default value
 ///
 /// ```rust
 /// # #[macro_use] extern crate itconfig;
+/// # use std::env;
+/// # env::set_var("DATABASE_URL", "postgres://u:p@localhost:5432/db");
 /// config! {
 ///     DATABASE_URL: String,
 ///     HOST: String => "127.0.0.1".to_string(),
 /// }
-/// # fn main () {}
+/// # cfg::init()
 /// ```
 ///
 /// By default itconfig lib creates module with 'cfg' name. But you can use simple meta instruction
@@ -107,12 +103,38 @@ impl From<EnvValue> for String {
 ///
 /// ```rust
 /// # #[macro_use] extern crate itconfig;
+/// # use std::env;
+/// env::set_var("DEBUG", "t");
+///
 /// config! {
 ///     #![mod_name = configuration]
 ///
 ///     DEBUG: bool,
 /// }
-/// # fn main () {}
+///
+/// configuration::init();
+/// assert_eq!(configuration::DEBUG(), true);
+/// ```
+///
+/// You can use namespaces for env variables
+///
+/// ```rust
+/// # #[macro_use] extern crate itconfig;
+/// # use std::env;
+/// env::set_var("DEBUG", "t");
+/// env::set_var("DATABASE_USERNAME", "user");
+/// env::set_var("DATABASE_PASSWORD", "pass");
+/// env::set_var("DATABASE_HOST", "localhost");
+///
+/// config! {
+///     DEBUG: bool,
+///     DATABASE {
+///         USERNAME: String,
+///         PASSWORD: String,
+///         HOST: String,
+///     }
+/// }
+/// # cfg::init()
 /// ```
 ///
 ///
@@ -185,6 +207,7 @@ macro_rules! __itconfig_parse_module {
         __itconfig_parse_variables! {
             tokens = $tokens,
             variables = [],
+            namespaces = [],
             module = {
                 name = $name,
             },
@@ -201,6 +224,27 @@ macro_rules! __itconfig_parse_module {
 #[macro_export]
 #[doc(hidden)]
 macro_rules! __itconfig_parse_variables {
+    // Find namespace
+    (
+        tokens = [
+            $ns_name:ident { $($ns_tokens:tt)* }
+            $($rest:tt)*
+        ],
+        $($args:tt)*
+    ) => {
+        __itconfig_parse_variables! {
+            tokens = [$($ns_tokens)*],
+            variables = [],
+            callback = {
+                current_namespace = {
+                    name = $ns_name,
+                },
+                tokens = [$($rest)*],
+                $($args)*
+            },
+        }
+    };
+
     // Find variable with default value
     (
         tokens = [
@@ -256,6 +300,34 @@ macro_rules! __itconfig_parse_variables {
         }
     };
 
+    // Done parsing all variables of namespace
+    (
+        tokens = [],
+        variables = $ns_variables:tt,
+        callback = {
+            current_namespace = {
+                $($current_namespace:tt)*
+            },
+            tokens = $tokens:tt,
+            variables = $variables:tt,
+            namespaces = [$($namespaces:tt,)*],
+            $($args:tt)*
+        },
+    ) => {
+        __itconfig_parse_variables! {
+            tokens = $tokens,
+            variables = $variables,
+            namespaces = [
+                $($namespaces,)*
+                {
+                    variables = $ns_variables,
+                    $($current_namespace)*
+                },
+            ],
+            $($args)*
+        }
+    };
+
     // Done parsing all variables
     (
         tokens = [],
@@ -276,9 +348,16 @@ macro_rules! __itconfig_parse_variables {
 macro_rules! __itconfig_impl {
     (
         variables = [$({
-            name = $name:ident,
+            name = $var_name:ident,
             $($variable:tt)*
-        },)+],
+        },)*],
+        namespaces = [$({
+            variables = [$({
+                name = $ns_var_name:tt,
+                $($ns_variables:tt)*
+            },)*],
+            name = $ns_name:ident,
+        },)*],
         module = {
             name = $mod_name:ident,
         },
@@ -288,15 +367,36 @@ macro_rules! __itconfig_impl {
             use std::env;
             use $crate::EnvValue;
 
+            $(
+                pub mod $ns_name {
+                    use std::env;
+                    use $crate::EnvValue;
+
+                    $(__itconfig_variable! {
+                        name = $ns_var_name,
+                        $($ns_variables)*
+                        env_prefix = concat!(stringify!($ns_name), "_"),
+                    })*
+                }
+            )*
+
             pub fn init() {
-                $($name();)+
+                $($var_name();)*
+
+                $($($ns_name::$ns_var_name();)*)*
             }
 
             $(__itconfig_variable! {
-                name = $name,
+                name = $var_name,
                 $($variable)*
-            })+
+                env_prefix = "",
+            })*
         }
+    };
+
+    // Invalid syntax
+    ($($tokens:tt)*) => {
+        __itconfig_invalid_syntax!();
     };
 }
 
@@ -310,9 +410,10 @@ macro_rules! __itconfig_variable {
         ty = $ty:ty,
         env_name = $env_name:expr,
         default = $default:expr,
+        env_prefix = $env_prefix:expr,
     ) => {
         pub fn $name() -> $ty {
-            env::var($env_name)
+            env::var(concat!($env_prefix, $env_name))
                 .map(|val| EnvValue::from(val).into())
                 .unwrap_or_else(|_| $default)
         }
@@ -323,15 +424,22 @@ macro_rules! __itconfig_variable {
         name = $name:ident,
         ty = $ty:ty,
         env_name = $env_name:expr,
+        env_prefix = $env_prefix:expr,
     ) => {
         pub fn $name() -> $ty {
-            env::var($env_name)
+            env::var(concat!($env_prefix, $env_name))
                 .map(|val| EnvValue::from(val).into())
                 .unwrap_or_else(|_| {
-                    panic!(format!(r#"Cannot read "{}" environment variable"#, $env_name))
+                    panic!(format!(r#"Cannot read "{}" environment variable"#,
+                                   concat!($env_prefix, $env_name)))
                 })
 
         }
+    };
+
+    // Invalid syntax
+    ($($tokens:tt)*) => {
+        __itconfig_invalid_syntax!();
     };
 }
 
