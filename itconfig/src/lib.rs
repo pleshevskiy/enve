@@ -216,6 +216,7 @@ macro_rules! __itconfig_parse_module {
             variables = [],
             namespaces = [],
             module = {
+                env_prefix = "",
                 name = $name,
             },
         }
@@ -242,10 +243,11 @@ macro_rules! __itconfig_parse_variables {
         __itconfig_parse_variables! {
             tokens = [$($ns_tokens)*],
             variables = [],
+            module = {
+                env_prefix = concat!(stringify!($ns_name), "_"),
+                name = $ns_name,
+            },
             callback = {
-                current_namespace = {
-                    name = $ns_name,
-                },
                 tokens = [$($rest)*],
                 $($args)*
             },
@@ -309,10 +311,10 @@ macro_rules! __itconfig_parse_variables {
     (
         tokens = [],
         variables = $ns_variables:tt,
+        module = {
+            $($current_namespace:tt)*
+        },
         callback = {
-            current_namespace = {
-                $($current_namespace:tt)*
-            },
             tokens = $tokens:tt,
             variables = $variables:tt,
             namespaces = [$($namespaces:tt,)*],
@@ -361,9 +363,11 @@ macro_rules! __itconfig_impl {
                 name = $ns_var_name:tt,
                 $($ns_variables:tt)*
             },)*],
+            env_prefix = $ns_env_prefix:expr,
             name = $ns_name:ident,
         },)*],
         module = {
+            env_prefix = $env_prefix:expr,
             name = $mod_name:ident,
         },
     ) => {
@@ -379,7 +383,7 @@ macro_rules! __itconfig_impl {
 
                     $(__itconfig_variable! {
                         name = $ns_var_name,
-                        env_name = concat!(stringify!($ns_name), "_", stringify!($ns_var_name)),
+                        env_prefix = $ns_env_prefix,
                         $($ns_variables)*
                     })*
                 }
@@ -393,7 +397,7 @@ macro_rules! __itconfig_impl {
 
             $(__itconfig_variable! {
                 name = $var_name,
-                env_name = stringify!($var_name),
+                env_prefix = $env_prefix,
                 $($variable)*
             })*
         }
@@ -409,30 +413,47 @@ macro_rules! __itconfig_impl {
 #[macro_export]
 #[doc(hidden)]
 macro_rules! __itconfig_variable {
+    (
+        name = $name:ident,
+        env_prefix = $env_prefix:expr,
+        ty = $ty:ty,
+        $($args:tt)*
+    ) => {
+        __itconfig_variable! {
+            name = $name,
+            env_prefix = $env_prefix,
+            env_name = concat!($env_prefix, stringify!($name)).to_uppercase(),
+            ty = $ty,
+            $($args)*
+        }
+    };
+
     // Add method without default value
     (
         name = $name:ident,
+        env_prefix = $env_prefix:expr,
         env_name = $env_name:expr,
         ty = $ty:ty,
     ) => {
         __itconfig_variable! {
             name = $name,
+            env_prefix = $env_prefix,
             env_name = $env_name,
             ty = $ty,
-            default = panic!(format!(r#"Cannot read "{}" environment variable"#,
-                                     $env_name.to_uppercase())),
+            default = panic!(format!(r#"Cannot read "{}" environment variable"#, $env_name)),
         }
     };
 
     // Add method with default value
     (
         name = $name:ident,
+        env_prefix = $env_prefix:expr,
         env_name = $env_name:expr,
         ty = $ty:ty,
         default = $default:expr,
     ) => {
         pub fn $name() -> $ty {
-            env::var($env_name.to_uppercase())
+            env::var($env_name)
                 .map(|val| EnvValue::from(val).into())
                 .unwrap_or_else(|_| $default)
         }
