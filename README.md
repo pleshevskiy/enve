@@ -12,22 +12,28 @@ We recommend you start with the [documentation].
 
 ```rust
 #[macro_use] extern crate itconfig;
-use dotenv::dotenv;
+use std::env;
+//use dotenv::dotenv;
 
 config! {
     DEBUG: bool => true,
     HOST: String => "127.0.0.1".to_string(),
     
     NAMESPACE {
-        FOO: bool => true,
+        #[env_name = "MY_CUSTOM_NAME"]
+        FOO: bool,
+        
         BAR: i32 => 10,
     }
 }
 
 fn main () {
-    dotenv().ok();
+    // dotenv().ok();
+    env::set_var("MY_CUSTOM_NAME", "t");
+    
     cfg::init();
     assert_eq(cfg::HOST(), String::from("127.0.0.1"));
+    assert_eq(cfg::NAMESPACE::FOO(), true);
 }
 ```
 
@@ -41,7 +47,7 @@ cargo test
 ## Roadmap
 
 * [x] Add namespace for variables
-* [ ] Custom env name
+* [x] Custom env name
 * [ ] Add if condition for feature variables
 
 

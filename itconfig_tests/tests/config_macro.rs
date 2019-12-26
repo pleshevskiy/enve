@@ -197,3 +197,24 @@ fn configuration_variables_and_namespace_in_lowercase() {
     env::remove_var("TESTING");
     env::remove_var("NAMESPACE_FOO");
 }
+
+
+#[test]
+fn custom_environment_name_for_variable() {
+    env::set_var("MY_CUSTOM_NAME", "95");
+
+    config! {
+        #[env_name = "MY_CUSTOM_NAME"]
+        PER_PAGE: i32,
+
+        APP {
+            #[env_name = "MY_CUSTOM_NAME"]
+            RECIPES_PER_PAGE: i32,
+        }
+    }
+
+    cfg::init();
+    assert_eq!(cfg::PER_PAGE(), 95);
+    assert_eq!(cfg::APP::RECIPES_PER_PAGE(), 95);
+    env::remove_var("MY_CUSTOM_NAME");
+}

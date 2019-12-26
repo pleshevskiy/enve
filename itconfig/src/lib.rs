@@ -7,6 +7,7 @@
 //!
 //! ```rust
 //! #[macro_use] extern crate itconfig;
+//! use std::env;
 //! // use dotenv::dotenv;
 //!
 //! config! {
@@ -14,15 +15,20 @@
 //!     HOST: String => "127.0.0.1".to_string(),
 //!
 //!     NAMESPACE {
-//!         FOO: bool => true,
+//!         #[env_name = "MY_CUSTOM_NAME"]
+//!         FOO: bool,
+//!
 //!         BAR: i32 => 10,
 //!     }
 //! }
 //!
 //! fn main () {
 //!     // dotenv().ok();
+//!     env::set_var("MY_CUSTOM_NAME", "t");
+//!
 //!     cfg::init();
 //!     assert_eq!(cfg::HOST(), String::from("127.0.0.1"));
+//!     assert_eq!(cfg::NAMESPACE::FOO(), true);
 //! }
 //! ```
 
@@ -142,6 +148,30 @@ impl From<EnvValue> for String {
 /// # cfg::init()
 /// ```
 ///
+/// If you want to read custom env name for variable you can change it manually.
+///
+/// **A variable in the nameespace will lose environment prefix**
+///
+/// ```rust
+/// # #[macro_use] extern crate itconfig;
+/// # use std::env;
+/// env::set_var("MY_CUSTOM_NAME", "95");
+///
+/// config! {
+///     #[env_name = "MY_CUSTOM_NAME"]
+///     PER_PAGE: i32,
+///
+///     APP {
+///         #[env_name = "MY_CUSTOM_NAME"]
+///         RECIPES_PER_PAGE: i32,
+///     }
+/// }
+///
+/// cfg::init();
+/// assert_eq!(cfg::PER_PAGE(), 95);
+/// assert_eq!(cfg::APP::RECIPES_PER_PAGE(), 95);
+/// ```
+///
 ///
 /// This module will also contain helper method:
 ///
@@ -257,6 +287,7 @@ macro_rules! __itconfig_parse_variables {
     // Find variable with default value
     (
         tokens = [
+            $(#$meta:tt)*
             $name:ident : $ty:ty => $default:expr,
             $($rest:tt)*
         ],
@@ -264,6 +295,7 @@ macro_rules! __itconfig_parse_variables {
     ) => {
         __itconfig_parse_variables! {
             current_variable = {
+                unparsed_meta = [$(#$meta)*],
                 name = $name,
                 ty = $ty,
                 default = $default,
@@ -276,6 +308,7 @@ macro_rules! __itconfig_parse_variables {
     // Find variable without default value
     (
         tokens = [
+            $(#$meta:tt)*
             $name:ident : $ty:ty,
             $($rest:tt)*
         ],
@@ -283,6 +316,7 @@ macro_rules! __itconfig_parse_variables {
     ) => {
         __itconfig_parse_variables! {
             current_variable = {
+                unparsed_meta = [$(#$meta)*],
                 name = $name,
                 ty = $ty,
             },
@@ -291,9 +325,32 @@ macro_rules! __itconfig_parse_variables {
         }
     };
 
+    (
+        current_variable = {
+            unparsed_meta = [
+                #[env_name = $env_name:expr]
+                $($meta:tt)*
+            ],
+            name = $name:ident,
+            $($current_variable:tt)*
+        },
+        $($args:tt)*
+    ) => {
+        __itconfig_parse_variables! {
+            current_variable = {
+                unparsed_meta = [$($meta)*],
+                name = $name,
+                env_name = $env_name,
+                $($current_variable)*
+            },
+            $($args)*
+        }
+    };
+
     // Done parsing variable
     (
         current_variable = {
+            unparsed_meta = [],
             $($current_variable:tt)*
         },
         tokens = $tokens:tt,
