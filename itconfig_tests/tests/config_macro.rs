@@ -1,5 +1,3 @@
-#![feature(trace_macros)]
-
 use std::env;
 
 #[macro_use]

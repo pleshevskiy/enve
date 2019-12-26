@@ -1,5 +1,5 @@
 # itconfig
-
+[![Build Status](https://travis-ci.org/icetemple/itconfig-rs.svg?branch=master)](https://travis-ci.org/icetemple/itconfig-rs)
 [![Documentation](https://docs.rs/itconfig/badge.svg)](https://docs.rs/itconfig)
 [![Crates.io](https://img.shields.io/badge/crates.io-v0.3.0-orange.svg?longCache=true)](https://crates.io/crates/itconfig)
 
