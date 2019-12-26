@@ -7,6 +7,7 @@
 //!
 //! ```rust
 //! #[macro_use] extern crate itconfig;
+//! use std::env;
 //! // use dotenv::dotenv;
 //!
 //! config! {
@@ -14,15 +15,20 @@
 //!     HOST: String => "127.0.0.1".to_string(),
 //!
 //!     NAMESPACE {
-//!         FOO: bool => true,
+//!         #[env_name = "MY_CUSTOM_NAME"]
+//!         FOO: bool,
+//!
 //!         BAR: i32 => 10,
 //!     }
 //! }
 //!
 //! fn main () {
 //!     // dotenv().ok();
+//!     env::set_var("MY_CUSTOM_NAME", "t");
+//!
 //!     cfg::init();
 //!     assert_eq!(cfg::HOST(), String::from("127.0.0.1"));
+//!     assert_eq!(cfg::NAMESPACE::FOO(), true);
 //! }
 //! ```
 
@@ -142,6 +148,30 @@ impl From<EnvValue> for String {
 /// # cfg::init()
 /// ```
 ///
+/// If you want to read custom env name for variable you can change it manually.
+///
+/// **A variable in the nameespace will lose environment prefix**
+///
+/// ```rust
+/// # #[macro_use] extern crate itconfig;
+/// # use std::env;
+/// env::set_var("MY_CUSTOM_NAME", "95");
+///
+/// config! {
+///     #[env_name = "MY_CUSTOM_NAME"]
+///     PER_PAGE: i32,
+///
+///     APP {
+///         #[env_name = "MY_CUSTOM_NAME"]
+///         RECIPES_PER_PAGE: i32,
+///     }
+/// }
+///
+/// cfg::init();
+/// assert_eq!(cfg::PER_PAGE(), 95);
+/// assert_eq!(cfg::APP::RECIPES_PER_PAGE(), 95);
+/// ```
+///
 ///
 /// This module will also contain helper method:
 ///
@@ -216,6 +246,7 @@ macro_rules! __itconfig_parse_module {
             variables = [],
             namespaces = [],
             module = {
+                env_prefix = "",
                 name = $name,
             },
         }
@@ -242,10 +273,11 @@ macro_rules! __itconfig_parse_variables {
         __itconfig_parse_variables! {
             tokens = [$($ns_tokens)*],
             variables = [],
+            module = {
+                env_prefix = concat!(stringify!($ns_name), "_"),
+                name = $ns_name,
+            },
             callback = {
-                current_namespace = {
-                    name = $ns_name,
-                },
                 tokens = [$($rest)*],
                 $($args)*
             },
@@ -255,6 +287,7 @@ macro_rules! __itconfig_parse_variables {
     // Find variable with default value
     (
         tokens = [
+            $(#$meta:tt)*
             $name:ident : $ty:ty => $default:expr,
             $($rest:tt)*
         ],
@@ -262,6 +295,7 @@ macro_rules! __itconfig_parse_variables {
     ) => {
         __itconfig_parse_variables! {
             current_variable = {
+                unparsed_meta = [$(#$meta)*],
                 name = $name,
                 ty = $ty,
                 default = $default,
@@ -274,6 +308,7 @@ macro_rules! __itconfig_parse_variables {
     // Find variable without default value
     (
         tokens = [
+            $(#$meta:tt)*
             $name:ident : $ty:ty,
             $($rest:tt)*
         ],
@@ -281,6 +316,7 @@ macro_rules! __itconfig_parse_variables {
     ) => {
         __itconfig_parse_variables! {
             current_variable = {
+                unparsed_meta = [$(#$meta)*],
                 name = $name,
                 ty = $ty,
             },
@@ -289,9 +325,32 @@ macro_rules! __itconfig_parse_variables {
         }
     };
 
+    (
+        current_variable = {
+            unparsed_meta = [
+                #[env_name = $env_name:expr]
+                $($meta:tt)*
+            ],
+            name = $name:ident,
+            $($current_variable:tt)*
+        },
+        $($args:tt)*
+    ) => {
+        __itconfig_parse_variables! {
+            current_variable = {
+                unparsed_meta = [$($meta)*],
+                name = $name,
+                env_name = $env_name,
+                $($current_variable)*
+            },
+            $($args)*
+        }
+    };
+
     // Done parsing variable
     (
         current_variable = {
+            unparsed_meta = [],
             $($current_variable:tt)*
         },
         tokens = $tokens:tt,
@@ -309,10 +368,10 @@ macro_rules! __itconfig_parse_variables {
     (
         tokens = [],
         variables = $ns_variables:tt,
+        module = {
+            $($current_namespace:tt)*
+        },
         callback = {
-            current_namespace = {
-                $($current_namespace:tt)*
-            },
             tokens = $tokens:tt,
             variables = $variables:tt,
             namespaces = [$($namespaces:tt,)*],
@@ -361,9 +420,11 @@ macro_rules! __itconfig_impl {
                 name = $ns_var_name:tt,
                 $($ns_variables:tt)*
             },)*],
+            env_prefix = $ns_env_prefix:expr,
             name = $ns_name:ident,
         },)*],
         module = {
+            env_prefix = $env_prefix:expr,
             name = $mod_name:ident,
         },
     ) => {
@@ -379,7 +440,7 @@ macro_rules! __itconfig_impl {
 
                     $(__itconfig_variable! {
                         name = $ns_var_name,
-                        env_name = concat!(stringify!($ns_name), "_", stringify!($ns_var_name)),
+                        env_prefix = $ns_env_prefix,
                         $($ns_variables)*
                     })*
                 }
@@ -393,7 +454,7 @@ macro_rules! __itconfig_impl {
 
             $(__itconfig_variable! {
                 name = $var_name,
-                env_name = stringify!($var_name),
+                env_prefix = $env_prefix,
                 $($variable)*
             })*
         }
@@ -409,30 +470,47 @@ macro_rules! __itconfig_impl {
 #[macro_export]
 #[doc(hidden)]
 macro_rules! __itconfig_variable {
+    (
+        name = $name:ident,
+        env_prefix = $env_prefix:expr,
+        ty = $ty:ty,
+        $($args:tt)*
+    ) => {
+        __itconfig_variable! {
+            name = $name,
+            env_prefix = $env_prefix,
+            env_name = concat!($env_prefix, stringify!($name)).to_uppercase(),
+            ty = $ty,
+            $($args)*
+        }
+    };
+
     // Add method without default value
     (
         name = $name:ident,
+        env_prefix = $env_prefix:expr,
         env_name = $env_name:expr,
         ty = $ty:ty,
     ) => {
         __itconfig_variable! {
             name = $name,
+            env_prefix = $env_prefix,
             env_name = $env_name,
             ty = $ty,
-            default = panic!(format!(r#"Cannot read "{}" environment variable"#,
-                                     $env_name.to_uppercase())),
+            default = panic!(format!(r#"Cannot read "{}" environment variable"#, $env_name)),
         }
     };
 
     // Add method with default value
     (
         name = $name:ident,
+        env_prefix = $env_prefix:expr,
         env_name = $env_name:expr,
         ty = $ty:ty,
         default = $default:expr,
     ) => {
         pub fn $name() -> $ty {
-            env::var($env_name.to_uppercase())
+            env::var($env_name)
                 .map(|val| EnvValue::from(val).into())
                 .unwrap_or_else(|_| $default)
         }
