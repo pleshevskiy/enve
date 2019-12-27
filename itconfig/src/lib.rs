@@ -172,6 +172,20 @@ impl From<EnvValue> for String {
 /// assert_eq!(cfg::APP::RECIPES_PER_PAGE(), 95);
 /// ```
 ///
+/// Also you can add custom meta for each variable. For example feature configurations.
+///
+/// ```rust
+/// # #[macro_use] extern crate itconfig;
+/// config! {
+///     #[cfg(feature = "postgres")]
+///     DATABASE_URL: String,
+///
+///     #[cfg(not(feature = "postgres"))]
+///     DATABASE_URL: String,
+/// }
+/// # fn main() {}
+/// ```
+///
 ///
 /// This module will also contain helper method:
 ///
@@ -296,6 +310,7 @@ macro_rules! __itconfig_parse_variables {
         __itconfig_parse_variables! {
             current_variable = {
                 unparsed_meta = [$(#$meta)*],
+                meta = [],
                 name = $name,
                 ty = $ty,
                 default = $default,
@@ -317,6 +332,7 @@ macro_rules! __itconfig_parse_variables {
         __itconfig_parse_variables! {
             current_variable = {
                 unparsed_meta = [$(#$meta)*],
+                meta = [],
                 name = $name,
                 ty = $ty,
             },
@@ -325,12 +341,14 @@ macro_rules! __itconfig_parse_variables {
         }
     };
 
+    // Find meta with custom env name
     (
         current_variable = {
             unparsed_meta = [
                 #[env_name = $env_name:expr]
-                $($meta:tt)*
+                $($rest:tt)*
             ],
+            meta = $meta:tt,
             name = $name:ident,
             $($current_variable:tt)*
         },
@@ -338,9 +356,34 @@ macro_rules! __itconfig_parse_variables {
     ) => {
         __itconfig_parse_variables! {
             current_variable = {
-                unparsed_meta = [$($meta)*],
+                unparsed_meta = [$($rest)*],
+                meta = $meta,
                 name = $name,
                 env_name = $env_name,
+                $($current_variable)*
+            },
+            $($args)*
+        }
+    };
+
+    // Find stranger meta
+    (
+        current_variable = {
+            unparsed_meta = [
+                #$stranger_meta:tt
+                $($rest:tt)*
+            ],
+            meta = [$(#$meta:tt,)*],
+            name = $name:ident,
+            $($current_variable:tt)*
+        },
+        $($args:tt)*
+    ) => {
+        __itconfig_parse_variables! {
+            current_variable = {
+                unparsed_meta = [$($rest)*],
+                meta = [$(#$meta,)* #$stranger_meta,],
+                name = $name,
                 $($current_variable)*
             },
             $($args)*
@@ -412,12 +455,14 @@ macro_rules! __itconfig_parse_variables {
 macro_rules! __itconfig_impl {
     (
         variables = [$({
+            meta = $var_meta:tt,
             name = $var_name:ident,
             $($variable:tt)*
         },)*],
         namespaces = [$({
             variables = [$({
-                name = $ns_var_name:tt,
+                meta = $ns_var_meta:tt,
+                name = $ns_var_name:ident,
                 $($ns_variables:tt)*
             },)*],
             env_prefix = $ns_env_prefix:expr,
@@ -439,6 +484,7 @@ macro_rules! __itconfig_impl {
                     use $crate::EnvValue;
 
                     $(__itconfig_variable! {
+                        meta = $ns_var_meta,
                         name = $ns_var_name,
                         env_prefix = $ns_env_prefix,
                         $($ns_variables)*
@@ -453,6 +499,7 @@ macro_rules! __itconfig_impl {
             }
 
             $(__itconfig_variable! {
+                meta = $var_meta,
                 name = $var_name,
                 env_prefix = $env_prefix,
                 $($variable)*
@@ -471,12 +518,14 @@ macro_rules! __itconfig_impl {
 #[doc(hidden)]
 macro_rules! __itconfig_variable {
     (
+        meta = $meta:tt,
         name = $name:ident,
         env_prefix = $env_prefix:expr,
         ty = $ty:ty,
         $($args:tt)*
     ) => {
         __itconfig_variable! {
+            meta = $meta,
             name = $name,
             env_prefix = $env_prefix,
             env_name = concat!($env_prefix, stringify!($name)).to_uppercase(),
@@ -487,12 +536,14 @@ macro_rules! __itconfig_variable {
 
     // Add method without default value
     (
+        meta = $meta:tt,
         name = $name:ident,
         env_prefix = $env_prefix:expr,
         env_name = $env_name:expr,
         ty = $ty:ty,
     ) => {
         __itconfig_variable! {
+            meta = $meta,
             name = $name,
             env_prefix = $env_prefix,
             env_name = $env_name,
@@ -503,12 +554,14 @@ macro_rules! __itconfig_variable {
 
     // Add method with default value
     (
+        meta = [$(#$meta:tt,)*],
         name = $name:ident,
         env_prefix = $env_prefix:expr,
         env_name = $env_name:expr,
         ty = $ty:ty,
         default = $default:expr,
     ) => {
+        $(#$meta)*
         pub fn $name() -> $ty {
             env::var($env_name)
                 .map(|val| EnvValue::from(val).into())

@@ -218,3 +218,26 @@ fn custom_environment_name_for_variable() {
     assert_eq!(cfg::APP::RECIPES_PER_PAGE(), 95);
     env::remove_var("MY_CUSTOM_NAME");
 }
+
+#[test]
+fn stranger_meta_data() {
+    env::set_var("MY_CUSTOM_NAME", "95");
+
+    config! {
+        #[cfg(feature = "postgres")]
+        #[env_name = "MY_CUSTOM_NAME"]
+        DATABASE_URL: String,
+
+        #[cfg(not(feature = "postgres"))]
+        #[env_name = "MY_CUSTOM_NAME"]
+        DATABASE_URL: i32,
+    }
+
+    cfg::init();
+    #[cfg(not(feature = "postgres"))]
+    assert_eq!(cfg::DATABASE_URL(), 95);
+
+    #[cfg(feature = "postgres")]
+    assert_eq!(cfg::DATABASE_URL(), "95");
+    env::remove_var("MY_CUSTOM_NAME");
+}

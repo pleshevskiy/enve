@@ -21,6 +21,10 @@ config! {
         FOO: bool,
         
         BAR: i32 => 10,
+        
+        #[cfg(feature = "feature")]
+        #[env_name = "POSTGRES_CONNECTION_STRING"]
+        DATABASE_URL: String
     }
 }
 
@@ -39,7 +43,8 @@ fn main () {
 
 * [x] Add namespace for variables
 * [x] Custom env name
-* [ ] Add if condition for feature variables
+* [x] Support feature config and other meta directives
+* [ ] Concat env variables to one variable
 
 
 ## License
