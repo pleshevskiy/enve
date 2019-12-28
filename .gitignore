@@ -4,4 +4,4 @@
 Cargo.lock
 
 itconfig/src/main.rs
-.env*
+/.env*

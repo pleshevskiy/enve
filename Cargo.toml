@@ -1,5 +1,6 @@
 [workspace]
 members = [
     "itconfig",
-    "itconfig_tests"
+    "itconfig_tests",
+    "examples/diesel",
 ]

@@ -1,0 +1,11 @@
+version: '3'
+
+services:
+  postgresql:
+    image: postgres:11-alpine
+    ports:
+      - 5534:5432
+    environment:
+      POSTGRES_PASSWORD: test
+      POSTGRES_USER: user
+      POSTGRES_DB: db
