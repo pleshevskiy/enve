@@ -298,11 +298,11 @@ macro_rules! __itconfig_parse_variables {
         }
     };
 
-    // Find variable with default value
+    // Find variable
     (
         tokens = [
             $(#$meta:tt)*
-            $name:ident : $ty:ty => $default:expr,
+            $name:ident : $ty:ty$( => $default:expr)?,
             $($rest:tt)*
         ],
         $($args:tt)*
@@ -313,28 +313,7 @@ macro_rules! __itconfig_parse_variables {
                 meta = [],
                 name = $name,
                 ty = $ty,
-                default = $default,
-            },
-            tokens = [$($rest)*],
-            $($args)*
-        }
-    };
-
-    // Find variable without default value
-    (
-        tokens = [
-            $(#$meta:tt)*
-            $name:ident : $ty:ty,
-            $($rest:tt)*
-        ],
-        $($args:tt)*
-    ) => {
-        __itconfig_parse_variables! {
-            current_variable = {
-                unparsed_meta = [$(#$meta)*],
-                meta = [],
-                name = $name,
-                ty = $ty,
+                $(default = $default,)?
             },
             tokens = [$($rest)*],
             $($args)*
@@ -534,44 +513,38 @@ macro_rules! __itconfig_variable {
         }
     };
 
-    // Add method without default value
-    (
-        meta = $meta:tt,
-        name = $name:ident,
-        env_prefix = $env_prefix:expr,
-        env_name = $env_name:expr,
-        ty = $ty:ty,
-    ) => {
-        __itconfig_variable! {
-            meta = $meta,
-            name = $name,
-            env_prefix = $env_prefix,
-            env_name = $env_name,
-            ty = $ty,
-            default = panic!(format!(r#"Cannot read "{}" environment variable"#, $env_name)),
-        }
-    };
-
-    // Add method with default value
+    // Add method
     (
         meta = [$(#$meta:tt,)*],
         name = $name:ident,
         env_prefix = $env_prefix:expr,
         env_name = $env_name:expr,
         ty = $ty:ty,
-        default = $default:expr,
+        $(default = $default:expr,)?
     ) => {
         $(#$meta)*
         pub fn $name() -> $ty {
-            env::var($env_name)
-                .map(|val| EnvValue::from(val).into())
-                .unwrap_or_else(|_| $default)
+            env_or!($env_name$(, $default)?)
         }
     };
 
     // Invalid syntax
     ($($tokens:tt)*) => {
         __itconfig_invalid_syntax!();
+    };
+}
+
+
+#[macro_export]
+macro_rules! env_or {
+    ($env_name:expr) => {
+        env_or!($env_name, panic!(format!(r#"Cannot read "{}" environment variable"#, $env_name)));
+    };
+
+    ($env_name:expr, $default:expr) => {
+        env::var($env_name)
+            .map(|val| EnvValue::from(val).into())
+            .unwrap_or_else(|_| $default)
     };
 }
 
