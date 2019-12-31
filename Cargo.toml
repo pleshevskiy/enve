@@ -3,5 +3,5 @@ members = [
     "itconfig",
     "itconfig_tests",
     "examples/diesel",
-    "examples/rocket",
+#    "examples/rocket",
 ]

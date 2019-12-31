@@ -192,7 +192,7 @@ impl From<EnvValue> for String {
 /// --------------------------------------------
 ///
 /// ```rust
-/// pub fn init();
+/// pub fn init() {}
 /// ```
 ///
 /// Run this at the main function for check all required variables without default value.

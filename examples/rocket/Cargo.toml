@@ -1,5 +1,5 @@
 [package]
-name = "rocket"
+name = "itconfig-rocket-example"
 version = "0.1.0"
 authors = ["Dmitriy Pleshevskiy <dmitriy@ideascup.me>"]
 edition = "2018"
