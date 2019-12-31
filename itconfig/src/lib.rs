@@ -186,14 +186,24 @@ impl From<EnvValue> for String {
 /// # fn main() {}
 /// ```
 ///
+/// ---
 ///
 /// This module will also contain helper method:
+/// --------------------------------------------
 ///
-/// `init`
+/// ```rust
+/// pub fn init();
+/// ```
+///
+/// Run this at the main function for check all required variables without default value.
+///
+/// Panics
 /// ------
 ///
 /// If you miss some required variables your application will panic at startup.
-/// Run this at the main function for check all required variables without default value.
+///
+/// Examples
+/// --------
 ///
 /// ```rust
 /// #[macro_use] extern crate itconfig;
@@ -211,7 +221,7 @@ impl From<EnvValue> for String {
 /// }
 /// ```
 ///
-#[macro_export]
+#[macro_export(local_inner_macros)]
 macro_rules! config {
     ($($tokens:tt)*) => {
         __itconfig_parse_module! {
@@ -454,14 +464,8 @@ macro_rules! __itconfig_impl {
     ) => {
         pub mod $mod_name {
             #![allow(non_snake_case)]
-            use std::env;
-            use $crate::EnvValue;
-
             $(
                 pub mod $ns_name {
-                    use std::env;
-                    use $crate::EnvValue;
-
                     $(__itconfig_variable! {
                         meta = $ns_var_meta,
                         name = $ns_var_name,
@@ -496,6 +500,7 @@ macro_rules! __itconfig_impl {
 #[macro_export]
 #[doc(hidden)]
 macro_rules! __itconfig_variable {
+    // Set default env name
     (
         meta = $meta:tt,
         name = $name:ident,
@@ -534,17 +539,33 @@ macro_rules! __itconfig_variable {
     };
 }
 
-
-#[macro_export]
+/// This macro returns environment variable by name and converts variable to desired type
+/// or returns default value.
+///
+/// Panics
+/// ------
+/// If you don't pass default value, macro will panic
+///
+/// Examples
+/// --------
+///
+/// ```rust
+/// # #[macro_use] extern crate itconfig;
+/// let url: String = env_or!("DATABASE_URL", "127.0.0.1".to_string());
+/// assert_eq!(url, "127.0.0.1".to_string());
+/// ```
+#[macro_export(local_inner_macro)]
 macro_rules! env_or {
     ($env_name:expr) => {
         env_or!($env_name, panic!(format!(r#"Cannot read "{}" environment variable"#, $env_name)));
     };
 
-    ($env_name:expr, $default:expr) => {
+    ($env_name:expr, $default:expr) => {{
+        use std::env;
+        use itconfig::EnvValue;
         env::var($env_name)
             .map(|val| EnvValue::from(val).into())
             .unwrap_or_else(|_| $default)
-    };
+    }};
 }
 
