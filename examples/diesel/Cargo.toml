@@ -1,5 +1,5 @@
 [package]
-name = "diesel"
+name = "itconfig-diesel-example"
 version = "0.1.0"
 authors = ["Dmitriy Pleshevskiy <dmitriy@ideascup.me>"]
 edition = "2018"
