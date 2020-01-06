@@ -10,7 +10,7 @@ use rocket::config::{Config, Environment};
 config! {
     ROCKET {
         HOST: String => "localhost".to_string(),
-        PORT: u16 => 8000,
+        PORT: u16 => 9000,
         BASE_URL: String => "/".to_string(),
     }
 }
@@ -24,13 +24,7 @@ fn index() -> &'static str {
 fn main() {
     cfg::init();
 
-    let config = Config::build(Environment::Staging)
-        .address(cfg::ROCKET::HOST())
-        .port(cfg::ROCKET::PORT())
-        .finalize()
-        .unwrap();
-
-    rocket::custom(config)
+    rocket::ignite()
         .mount(&cfg::ROCKET::BASE_URL(), routes![index])
         .launch();
 }

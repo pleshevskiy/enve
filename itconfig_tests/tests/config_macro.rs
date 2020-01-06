@@ -241,3 +241,21 @@ fn stranger_meta_data() {
     assert_eq!(cfg::DATABASE_URL(), "95");
     env::remove_var("MY_CUSTOM_NAME");
 }
+
+#[test]
+fn setting_default_env_variable() {
+    config! {
+        DEFAULT_ENV_STRING: String => "localhost".to_string(),
+        DEFAULT_ENV_BOOLEAN: bool => true,
+        DEFAULT_ENV_UINT: u32 => 40,
+        DEFAULT_ENV_FLOAT: f64 => 40.9,
+    }
+
+    cfg::init();
+
+    assert_eq!(env::var("DEFAULT_ENV_STRING"), Ok("localhost".to_string()));
+    assert_eq!(env::var("DEFAULT_ENV_BOOLEAN"), Ok("true".to_string()));
+    assert_eq!(env::var("DEFAULT_ENV_UINT"), Ok("40".to_string()));
+    assert_eq!(env::var("DEFAULT_ENV_FLOAT"), Ok("40.9".to_string()));
+}
+

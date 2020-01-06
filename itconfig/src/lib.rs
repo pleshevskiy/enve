@@ -557,15 +557,28 @@ macro_rules! __itconfig_variable {
 #[macro_export(local_inner_macro)]
 macro_rules! env_or {
     ($env_name:expr) => {
-        env_or!($env_name, panic!(format!(r#"Cannot read "{}" environment variable"#, $env_name)));
+        env_or!($env_name, format!(r#"Cannot read "{}" environment variable"#, $env_name), panic);
     };
 
-    ($env_name:expr, $default:expr) => {{
+    ($env_name:expr, $default:expr) => {
+        env_or!($env_name, $default, default);
+    };
+
+    ($env_name:expr, $default:expr, $token:tt) => {{
         use std::env;
         use itconfig::EnvValue;
         env::var($env_name)
             .map(|val| EnvValue::from(val).into())
-            .unwrap_or_else(|_| $default)
+            .unwrap_or_else(|_| env_or!(@$token $env_name, $default))
     }};
+
+    (@default $env_name:expr, $default:expr) => {{
+        env::set_var($env_name, $default.to_string());
+        $default
+    }};
+
+    (@panic $env_name:expr, $default:expr) => {
+        panic!($default);
+    };
 }
 

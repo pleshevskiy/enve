@@ -54,7 +54,7 @@ cargo test
 * [x] Add namespace for variables
 * [x] Custom env name
 * [x] Support feature config and other meta directives
-* [ ] Add default value to env if env is not found
+* [x] Add default value to env if env is not found
 * [ ] Concat env variables to one variable
 
 
