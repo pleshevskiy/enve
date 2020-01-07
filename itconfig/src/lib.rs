@@ -308,6 +308,29 @@ macro_rules! __itconfig_parse_variables {
         }
     };
 
+    // Find concatenated variable
+    (
+        tokens = [
+            $(#$meta:tt)*
+            $name:ident < ($($inner:tt)+),
+            $($rest:tt)*
+        ],
+        $($args:tt)*
+    ) => {
+        __itconfig_parse_variables! {
+            current_variable = {
+                unparsed_meta = [$(#$meta)*],
+                meta = [],
+                unparsed_concat = [$($inner)+],
+                concat = [],
+                name = $name,
+                ty = String,
+            },
+            tokens = [$($rest)*],
+            $($args)*
+        }
+    };
+
     // Find variable
     (
         tokens = [
@@ -321,6 +344,8 @@ macro_rules! __itconfig_parse_variables {
             current_variable = {
                 unparsed_meta = [$(#$meta)*],
                 meta = [],
+                unparsed_concat = [],
+                concat = [],
                 name = $name,
                 ty = $ty,
                 $(default = $default,)?
@@ -338,6 +363,8 @@ macro_rules! __itconfig_parse_variables {
                 $($rest:tt)*
             ],
             meta = $meta:tt,
+            unparsed_concat = $unparsed_concat:tt,
+            concat = $concat:tt,
             name = $name:ident,
             $($current_variable:tt)*
         },
@@ -347,6 +374,8 @@ macro_rules! __itconfig_parse_variables {
             current_variable = {
                 unparsed_meta = [$($rest)*],
                 meta = $meta,
+                unparsed_concat = $unparsed_concat,
+                concat = $concat,
                 name = $name,
                 env_name = $env_name,
                 $($current_variable)*
@@ -363,7 +392,6 @@ macro_rules! __itconfig_parse_variables {
                 $($rest:tt)*
             ],
             meta = [$(#$meta:tt,)*],
-            name = $name:ident,
             $($current_variable:tt)*
         },
         $($args:tt)*
@@ -372,7 +400,32 @@ macro_rules! __itconfig_parse_variables {
             current_variable = {
                 unparsed_meta = [$($rest)*],
                 meta = [$(#$meta,)* #$stranger_meta,],
-                name = $name,
+                $($current_variable)*
+            },
+            $($args)*
+        }
+    };
+
+    // Parse concat params
+    (
+        current_variable = {
+            unparsed_meta = $unparsed_meta:tt,
+            meta = $meta:tt,
+            unparsed_concat = [
+                $concat_param:tt,
+                $($rest:tt)*
+            ],
+            concat = [$($concat:expr,)*],
+            $($current_variable:tt)*
+        },
+        $($args:tt)*
+    ) => {
+        __itconfig_parse_variables! {
+            current_variable = {
+                unparsed_meta = $unparsed_meta,
+                meta = $meta,
+                unparsed_concat = [$($rest)*],
+                concat = [$($concat,)* __itconfig_concat_param!($concat_param),],
                 $($current_variable)*
             },
             $($args)*
@@ -383,6 +436,8 @@ macro_rules! __itconfig_parse_variables {
     (
         current_variable = {
             unparsed_meta = [],
+            meta = $meta:tt,
+            unparsed_concat = [],
             $($current_variable:tt)*
         },
         tokens = $tokens:tt,
@@ -391,7 +446,7 @@ macro_rules! __itconfig_parse_variables {
     ) => {
         __itconfig_parse_variables! {
             tokens = $tokens,
-            variables = [$($variables,)* { $($current_variable)* },],
+            variables = [$($variables,)* { meta = $meta, $($current_variable)* },],
             $($args)*
         }
     };
@@ -445,12 +500,14 @@ macro_rules! __itconfig_impl {
     (
         variables = [$({
             meta = $var_meta:tt,
+            concat = $var_concat:tt,
             name = $var_name:ident,
             $($variable:tt)*
         },)*],
         namespaces = [$({
             variables = [$({
                 meta = $ns_var_meta:tt,
+                concat = $ns_var_concat:tt,
                 name = $ns_var_name:ident,
                 $($ns_variables:tt)*
             },)*],
@@ -464,10 +521,17 @@ macro_rules! __itconfig_impl {
     ) => {
         pub mod $mod_name {
             #![allow(non_snake_case)]
+            use std::env;
+            use itconfig::EnvValue;
+
             $(
                 pub mod $ns_name {
+                    use std::env;
+                    use itconfig::EnvValue;
+
                     $(__itconfig_variable! {
                         meta = $ns_var_meta,
+                        concat = $ns_var_concat,
                         name = $ns_var_name,
                         env_prefix = $ns_env_prefix,
                         $($ns_variables)*
@@ -483,6 +547,7 @@ macro_rules! __itconfig_impl {
 
             $(__itconfig_variable! {
                 meta = $var_meta,
+                concat = $var_concat,
                 name = $var_name,
                 env_prefix = $env_prefix,
                 $($variable)*
@@ -499,10 +564,20 @@ macro_rules! __itconfig_impl {
 
 #[macro_export]
 #[doc(hidden)]
+macro_rules! __itconfig_concat_param {
+    ($env:ident) => ( env_or!(stringify!($env).to_uppercase()) );
+
+    ($str:expr) => ( $str.to_string() );
+}
+
+
+#[macro_export]
+#[doc(hidden)]
 macro_rules! __itconfig_variable {
     // Set default env name
     (
         meta = $meta:tt,
+        concat = $concat:tt,
         name = $name:ident,
         env_prefix = $env_prefix:expr,
         ty = $ty:ty,
@@ -510,6 +585,7 @@ macro_rules! __itconfig_variable {
     ) => {
         __itconfig_variable! {
             meta = $meta,
+            concat = $concat,
             name = $name,
             env_prefix = $env_prefix,
             env_name = concat!($env_prefix, stringify!($name)).to_uppercase(),
@@ -518,9 +594,27 @@ macro_rules! __itconfig_variable {
         }
     };
 
+    (
+        meta = [$(#$meta:tt,)*],
+        concat = [$($concat:expr,)+],
+        name = $name:ident,
+        env_prefix = $env_prefix:expr,
+        env_name = $env_name:expr,
+        ty = $ty:ty,
+        $($args:tt)*
+    ) => {
+        $(#$meta)*
+        pub fn $name() -> $ty {
+            let value_parts: Vec<String> = vec!($($concat),+);
+            let value = value_parts.join("");
+            env_or!(@default $env_name, value)
+        }
+    };
+
     // Add method
     (
         meta = [$(#$meta:tt,)*],
+        concat = [],
         name = $name:ident,
         env_prefix = $env_prefix:expr,
         env_name = $env_name:expr,

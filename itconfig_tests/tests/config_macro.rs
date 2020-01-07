@@ -5,7 +5,7 @@ extern crate itconfig;
 
 
 #[test]
-#[should_panic]
+#[should_panic(expected = "Cannot read \"MISS_VARIABLE\" environment variable")]
 fn should_panic_if_miss_env_variable() {
     config! {
         MISS_VARIABLE: bool,
@@ -157,12 +157,12 @@ fn change_configuration_module_name() {
 
 #[test]
 fn configuration_with_namespace() {
-    env::set_var("POSTGRES_HOST", "t");
+    env::set_var("DB_HOST", "t");
 
     config! {
         DEBUG: bool => true,
 
-        POSTGRES {
+        DB {
             HOST: bool,
             PORT: bool => true,
             USERNAME: bool => true,
@@ -173,8 +173,7 @@ fn configuration_with_namespace() {
 
     cfg::init();
     assert_eq!(cfg::DEBUG(), true);
-    assert_eq!(cfg::POSTGRES::HOST(), true);
-    env::remove_var("POSTGRES_HOST");
+    assert_eq!(cfg::DB::HOST(), true);
 }
 
 
@@ -194,8 +193,6 @@ fn configuration_variables_and_namespace_in_lowercase() {
     cfg::init();
     assert_eq!(cfg::testing(), true);
     assert_eq!(cfg::namespace::foo(), true);
-    env::remove_var("TESTING");
-    env::remove_var("NAMESPACE_FOO");
 }
 
 
@@ -216,7 +213,6 @@ fn custom_environment_name_for_variable() {
     cfg::init();
     assert_eq!(cfg::PER_PAGE(), 95);
     assert_eq!(cfg::APP::RECIPES_PER_PAGE(), 95);
-    env::remove_var("MY_CUSTOM_NAME");
 }
 
 #[test]
@@ -239,7 +235,6 @@ fn stranger_meta_data() {
 
     #[cfg(feature = "postgres")]
     assert_eq!(cfg::DATABASE_URL(), "95");
-    env::remove_var("MY_CUSTOM_NAME");
 }
 
 #[test]
@@ -257,5 +252,66 @@ fn setting_default_env_variable() {
     assert_eq!(env::var("DEFAULT_ENV_BOOLEAN"), Ok("true".to_string()));
     assert_eq!(env::var("DEFAULT_ENV_UINT"), Ok("40".to_string()));
     assert_eq!(env::var("DEFAULT_ENV_FLOAT"), Ok("40.9".to_string()));
+}
+
+
+#[test]
+fn concatenate_environment_variables() {
+    env::set_var("POSTGRES_USERNAME", "user");
+    env::set_var("POSTGRES_PASSWORD", "pass");
+    env::set_var("POSTGRES_HOST", "localhost");
+    env::set_var("POSTGRES_DB", "test");
+
+    config! {
+        DATABASE_URL < (
+            "postgres://",
+            POSTGRES_USERNAME,
+            ":",
+            POSTGRES_PASSWORD,
+            "@",
+            POSTGRES_HOST,
+            "/",
+            POSTGRES_DB,
+        ),
+    }
+
+    cfg::init();
+    assert_eq!(cfg::DATABASE_URL(), String::from("postgres://user:pass@localhost/test"));
+}
+
+
+#[test]
+fn setting_default_concat_env_variable() {
+    env::set_var("SETTING_DEFAULT_CONCAT_ENV_VARIABLE", "custom");
+
+    config! {
+        DEFAULT_CONCAT_ENV < (
+            "string",
+            "/",
+            SETTING_DEFAULT_CONCAT_ENV_VARIABLE,
+        ),
+    }
+
+    cfg::init();
+    assert_eq!(env::var("DEFAULT_CONCAT_ENV"), Ok("string/custom".to_string()));
+}
+
+
+#[test]
+#[should_panic(expected = "Cannot read \"PG_USERNAME\" environment variable")]
+fn concatenate_not_defined_environment_variables() {
+    config! {
+        DATABASE_URL < (
+            "postgres://",
+            PG_USERNAME,
+            ":",
+            PG_PASSWORD,
+            "@",
+            PG_HOST,
+            "/",
+            PG_DB,
+        ),
+    }
+    cfg::init();
 }
 
