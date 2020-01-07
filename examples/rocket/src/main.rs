@@ -9,9 +9,9 @@ use rocket::config::{Config, Environment};
 
 config! {
     ROCKET {
-        HOST: String => "localhost".to_string(),
+        HOST: String => "localhost",
         PORT: u16 => 9000,
-        BASE_URL: String => "/".to_string(),
+        BASE_URL: String => "/",
     }
 }
 
