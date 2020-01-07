@@ -14,7 +14,7 @@ use std::env;
 
 config! {
     DEBUG: bool => true,
-    HOST: String => "127.0.0.1".to_string(),
+    HOST: String => "127.0.0.1",
     
     DATABASE_URL < (
         "postgres://",
