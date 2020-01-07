@@ -39,7 +39,7 @@
 //!
 //!     cfg::init();
 //!     assert_eq!(cfg::HOST(), String::from("127.0.0.1"));
-//!     assert_eq!(cfg::DATABASE_URL(), "postgres://user:pass@localhost:5432/test");
+//!     assert_eq!(cfg::DATABASE_URL(), String::from("postgres://user:pass@localhost:5432/test"));
 //!     assert_eq!(cfg::NAMESPACE::FOO(), true);
 //! }
 //! ```

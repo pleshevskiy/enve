@@ -20,6 +20,17 @@ config! {
     DEBUG: bool => true,
     HOST: String => "127.0.0.1".to_string(),
     
+    DATABASE_URL < (
+        "postgres://",
+        POSTGRES_USERNAME => "user",
+        ":",
+        POSTGRES_PASSWORD => "pass",
+        "@",
+        POSTGRES_HOST => "localhost:5432",
+        "/",
+        POSTGRES_DB => "test",
+    ),
+
     NAMESPACE {
         #[env_name = "MY_CUSTOM_NAME"]
         FOO: bool,
@@ -37,8 +48,9 @@ fn main () {
     env::set_var("MY_CUSTOM_NAME", "t");
     
     cfg::init();
-    assert_eq(cfg::HOST(), String::from("127.0.0.1"));
-    assert_eq(cfg::NAMESPACE::FOO(), true);
+    assert_eq!(cfg::HOST(), String::from("127.0.0.1"));
+    assert_eq!(cfg::DATABASE_URL(), String::from("postgres://user:pass@localhost:5432/test"));
+    assert_eq!(cfg::NAMESPACE::FOO(), true);
 }
 ```
 
@@ -55,7 +67,7 @@ cargo test
 * [x] Custom env name
 * [x] Support feature config and other meta directives
 * [x] Add default value to env if env is not found
-* [ ] Concat env variables to one variable
+* [x] Concat env variables to one variable
 
 
 ## License
