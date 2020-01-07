@@ -1,4 +1,5 @@
 use std::env;
+use std::env::VarError;
 
 #[macro_use]
 extern crate itconfig;
@@ -55,13 +56,15 @@ fn different_types_with_default_value() {
     config! {
         NUMBER: i32 => 30,
         BOOL: bool => true,
+        STR: String => "str",
         STRING: String => "string".to_string(),
     }
 
     cfg::init();
     assert_eq!(cfg::NUMBER(), 30);
     assert_eq!(cfg::BOOL(), true);
-    assert_eq!(cfg::STRING(), "string");
+    assert_eq!(cfg::STR(), "str".to_string());
+    assert_eq!(cfg::STRING(), "string".to_string());
 }
 
 #[test]
@@ -240,7 +243,7 @@ fn stranger_meta_data() {
 #[test]
 fn setting_default_env_variable() {
     config! {
-        DEFAULT_ENV_STRING: String => "localhost".to_string(),
+        DEFAULT_ENV_STRING: String => "localhost",
         DEFAULT_ENV_BOOLEAN: bool => true,
         DEFAULT_ENV_UINT: u32 => 40,
         DEFAULT_ENV_FLOAT: f64 => 40.9,
@@ -321,13 +324,13 @@ fn default_value_for_concatenate_env_parameter() {
     config! {
         CONCATENATED_DATABASE_URL < (
             "postgres://",
-            NOT_DEFINED_PG_USERNAME => "user".to_string(),
+            NOT_DEFINED_PG_USERNAME => "user",
             ":",
-            NOT_DEFINED_PG_PASSWORD => "pass".to_string(),
+            NOT_DEFINED_PG_PASSWORD => "pass",
             "@",
-            NOT_DEFINED_PG_HOST => "localhost:5432".to_string(),
+            NOT_DEFINED_PG_HOST => "localhost:5432",
             "/",
-            NOT_DEFINED_PG_DB => "test".to_string(),
+            NOT_DEFINED_PG_DB => "test",
         ),
     }
 
@@ -336,4 +339,53 @@ fn default_value_for_concatenate_env_parameter() {
         env::var("CONCATENATED_DATABASE_URL"),
         Ok("postgres://user:pass@localhost:5432/test".to_string())
     );
+}
+
+#[test]
+fn envname_meta_for_concatenated_env_variable() {
+    config! {
+        #[env_name = "CUSTOM_CONCAT_ENVNAME"]
+        CONCAT_ENVVAR < (
+            "postgres://",
+            NOT_DEFINED_PG_USERNAME => "user",
+            ":",
+            NOT_DEFINED_PG_PASSWORD => "pass",
+            "@",
+            NOT_DEFINED_PG_HOST => "localhost:5432",
+            "/",
+            NOT_DEFINED_PG_DB => "test",
+        ),
+    }
+
+    cfg::init();
+    assert_eq!(
+        env::var("CUSTOM_CONCAT_ENVNAME"),
+        Ok("postgres://user:pass@localhost:5432/test".to_string())
+    );
+    assert_eq!(env::var("CONCAT_ENVVAR"), Err(VarError::NotPresent));
+}
+
+#[test]
+fn concatenated_environment_variable_in_namespace() {
+    config! {
+        CONCATED_NAMESPACE {
+            CONCAT_ENVVAR < (
+                "postgres://",
+                NOT_DEFINED_PG_USERNAME => "user",
+                ":",
+                NOT_DEFINED_PG_PASSWORD => "pass",
+                "@",
+                NOT_DEFINED_PG_HOST => "localhost:5432",
+                "/",
+                NOT_DEFINED_PG_DB => "test",
+            ),
+        }
+    }
+
+    cfg::init();
+    assert_eq!(
+        env::var("CONCATED_NAMESPACE_CONCAT_ENVVAR"),
+        Ok("postgres://user:pass@localhost:5432/test".to_string())
+    );
+    assert_eq!(env::var("CONCAT_ENVVAR"), Err(VarError::NotPresent));
 }

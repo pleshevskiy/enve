@@ -1,10 +1,10 @@
 [package]
 name = "itconfig"
-version = "0.6.0"
+version = "0.7.0"
 authors = ["Dmitriy Pleshevskiy <dmitriy@ideascup.me>"]
 description = "Easy build a configs from environment variables and use it in globally."
 categories = ["config", "web-programming"]
-keywords = ["config", "env", "macro", "configuration", "environment"]
+keywords = ["config", "env", "macro", "configuration", "environment", "namespace", "concat", "concatinated"]
 edition = "2018"
 license = "MIT"
 repository = "https://github.com/icetemple/itconfig-rs"

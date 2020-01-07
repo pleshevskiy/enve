@@ -12,7 +12,18 @@
 //!
 //! config! {
 //!     DEBUG: bool => true,
-//!     HOST: String => "127.0.0.1".to_string(),
+//!     HOST: String => "127.0.0.1",
+//!
+//!     DATABASE_URL < (
+//!         "postgres://",
+//!         POSTGRES_USERNAME => "user",
+//!         ":",
+//!         POSTGRES_PASSWORD => "pass",
+//!         "@",
+//!         POSTGRES_HOST => "localhost:5432",
+//!         "/",
+//!         POSTGRES_DB => "test",
+//!     ),
 //!
 //!     NAMESPACE {
 //!         #[env_name = "MY_CUSTOM_NAME"]
@@ -28,6 +39,7 @@
 //!
 //!     cfg::init();
 //!     assert_eq!(cfg::HOST(), String::from("127.0.0.1"));
+//!     assert_eq!(cfg::DATABASE_URL(), "postgres://user:pass@localhost:5432/test");
 //!     assert_eq!(cfg::NAMESPACE::FOO(), true);
 //! }
 //! ```
@@ -83,6 +95,8 @@ impl From<EnvValue> for String {
 /// All variables are required and program will panic if some variables haven't value, but you
 /// can add default value for specific variable.
 ///
+/// Starts with v0.6.0 if you don't have an optional variable, the variable is set automatically.
+///
 /// Example usage
 /// -------------
 ///
@@ -104,7 +118,7 @@ impl From<EnvValue> for String {
 /// # env::set_var("DATABASE_URL", "postgres://u:p@localhost:5432/db");
 /// config! {
 ///     DATABASE_URL: String,
-///     HOST: String => "127.0.0.1".to_string(),
+///     HOST: String => "127.0.0.1",
 /// }
 /// # cfg::init()
 /// ```
@@ -127,6 +141,9 @@ impl From<EnvValue> for String {
 /// assert_eq!(configuration::DEBUG(), true);
 /// ```
 ///
+/// Namespaces
+/// ----------
+///
 /// You can use namespaces for env variables
 ///
 /// ```rust
@@ -147,6 +164,9 @@ impl From<EnvValue> for String {
 /// }
 /// # cfg::init()
 /// ```
+///
+/// Meta
+/// ----
 ///
 /// If you want to read custom env name for variable you can change it manually.
 ///
@@ -186,6 +206,57 @@ impl From<EnvValue> for String {
 /// # fn main() {}
 /// ```
 ///
+/// Concatenate
+/// -----------
+///
+/// Try to concatenate env variable or strings or both to you env variable. It's easy!
+///
+/// ```rust
+/// # #[macro_use] extern crate itconfig;
+/// # use std::env;
+/// env::set_var("POSTGRES_USERNAME", "user");
+/// env::set_var("POSTGRES_PASSWORD", "pass");
+///
+/// config! {
+///     DATABASE_URL < (
+///         "postgres://",
+///         POSTGRES_USERNAME,
+///         ":",
+///         POSTGRES_PASSWORD,
+///         "@",
+///         POSTGRES_HOST => "localhost:5432",
+///         "/",
+///         POSTGRES_DB => "test",
+///     ),
+/// }
+///
+/// cfg::init();
+/// assert_eq!(cfg::DATABASE_URL(), "postgres://user:pass@localhost:5432/test".to_string())
+/// ```
+///
+/// Concatinated variables can be only strings and support all features like namespaces and meta.
+///
+/// ```rust
+/// # #[macro_use] extern crate itconfig;
+/// config! {
+///     CONCATED_NAMESPACE {
+///         #[env_name = "DATABASE_URL"]
+///         CONCAT_ENVVAR < (
+///             "postgres://",
+///             NOT_DEFINED_PG_USERNAME => "user",
+///             ":",
+///             NOT_DEFINED_PG_PASSWORD => "pass",
+///             "@",
+///             NOT_DEFINED_PG_HOST => "localhost:5432",
+///             "/",
+///             NOT_DEFINED_PG_DB => "test",
+///         ),
+///     }
+/// }
+///
+/// cfg::init();
+/// ```
+///
 /// ---
 ///
 /// This module will also contain helper method:
@@ -211,7 +282,7 @@ impl From<EnvValue> for String {
 ///
 /// config! {
 ///     DEBUG: bool => true,
-///     HOST: String => "127.0.0.1".to_string(),
+///     HOST: String => "127.0.0.1",
 /// }
 ///
 /// fn main () {
@@ -565,14 +636,17 @@ macro_rules! __itconfig_impl {
 #[macro_export]
 #[doc(hidden)]
 macro_rules! __itconfig_concat_param {
+    // Find env parameter with default value
     ($env_name:ident => $default:expr) => {
-        __itconfig_env_or!(stringify!($env_name).to_uppercase(), $default, default)
+        __itconfig_variable_helper!(stringify!($env_name).to_uppercase(), $default, default)
     };
 
+    // Find env parameter without default value
     ($env_name:ident) => {
         env_or!(stringify!($env_name).to_uppercase())
     };
 
+    // Find string parameter
     ($str:expr) => ( $str.to_string() );
 
     // Invalid syntax
@@ -605,6 +679,7 @@ macro_rules! __itconfig_variable {
         }
     };
 
+    // Add method for concatenated variable
     (
         meta = [$(#$meta:tt,)*],
         concat = [$($concat:expr,)+],
@@ -618,11 +693,11 @@ macro_rules! __itconfig_variable {
         pub fn $name() -> $ty {
             let value_parts: Vec<String> = vec!($($concat),+);
             let value = value_parts.join("");
-            __itconfig_env_or!(@setenv $env_name, value)
+            __itconfig_variable_helper!(@setenv $env_name, value)
         }
     };
 
-    // Add method
+    // Add method for env variable
     (
         meta = [$(#$meta:tt,)*],
         concat = [],
@@ -663,12 +738,12 @@ macro_rules! __itconfig_variable {
 macro_rules! env_or {
     // Env without default value
     ($env_name:expr) => {
-        __itconfig_env_or!($env_name, format!(r#"Cannot read "{}" environment variable"#, $env_name), panic);
+        __itconfig_variable_helper!($env_name, format!(r#"Cannot read "{}" environment variable"#, $env_name), panic);
     };
 
     // Env with default value
     ($env_name:expr, $default:expr) => {
-        __itconfig_env_or!($env_name, $default, setenv);
+        __itconfig_variable_helper!($env_name, $default, setenv);
     };
 
     // Invalid syntax
@@ -691,24 +766,29 @@ macro_rules! __itconfig_env_or_invalid_syntax {
 
 
 #[macro_export]
-macro_rules! __itconfig_env_or {
+#[doc(hidden)]
+macro_rules! __itconfig_variable_helper {
+    // Get env variable
     ($env_name:expr, $default:expr, $token:tt) => {{
         use std::env;
         use itconfig::EnvValue;
         env::var($env_name)
-            .map(|val| EnvValue::from(val).into())
-            .unwrap_or_else(|_| __itconfig_env_or!(@$token $env_name, $default))
+            .map(|val| __itconfig_variable_helper!(val))
+            .unwrap_or_else(|_| __itconfig_variable_helper!(@$token $env_name, $default))
     }};
 
-    (@default $env_name:expr, $default:expr) => {{
-        $default
+    // Returns converted env variable
+    ($(@default $env_name:expr,)? $default:expr) => {{
+        EnvValue::from($default.to_string()).into()
     }};
 
+    // Set default value for env variable and returns default
     (@setenv $env_name:expr, $default:expr) => {{
         env::set_var($env_name, $default.to_string());
-        $default
+        __itconfig_variable_helper!($default)
     }};
 
+    // Make panic for env variable
     (@panic $env_name:expr, $default:expr) => {
         panic!($default);
     };
