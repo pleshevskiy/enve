@@ -12,7 +12,18 @@
 //!
 //! config! {
 //!     DEBUG: bool => true,
-//!     HOST: String => "127.0.0.1".to_string(),
+//!     HOST: String => "127.0.0.1",
+//!
+//!     DATABASE_URL < (
+//!         "postgres://",
+//!         POSTGRES_USERNAME => "user",
+//!         ":",
+//!         POSTGRES_PASSWORD => "pass",
+//!         "@",
+//!         POSTGRES_HOST => "localhost:5432",
+//!         "/",
+//!         POSTGRES_DB => "test",
+//!     ),
 //!
 //!     NAMESPACE {
 //!         #[env_name = "MY_CUSTOM_NAME"]
@@ -28,6 +39,7 @@
 //!
 //!     cfg::init();
 //!     assert_eq!(cfg::HOST(), String::from("127.0.0.1"));
+//!     assert_eq!(cfg::DATABASE_URL(), String::from("postgres://user:pass@localhost:5432/test"));
 //!     assert_eq!(cfg::NAMESPACE::FOO(), true);
 //! }
 //! ```
@@ -83,6 +95,8 @@ impl From<EnvValue> for String {
 /// All variables are required and program will panic if some variables haven't value, but you
 /// can add default value for specific variable.
 ///
+/// Starts with v0.6.0 if you don't have an optional variable, the variable is set automatically.
+///
 /// Example usage
 /// -------------
 ///
@@ -104,7 +118,7 @@ impl From<EnvValue> for String {
 /// # env::set_var("DATABASE_URL", "postgres://u:p@localhost:5432/db");
 /// config! {
 ///     DATABASE_URL: String,
-///     HOST: String => "127.0.0.1".to_string(),
+///     HOST: String => "127.0.0.1",
 /// }
 /// # cfg::init()
 /// ```
@@ -127,6 +141,9 @@ impl From<EnvValue> for String {
 /// assert_eq!(configuration::DEBUG(), true);
 /// ```
 ///
+/// Namespaces
+/// ----------
+///
 /// You can use namespaces for env variables
 ///
 /// ```rust
@@ -147,6 +164,9 @@ impl From<EnvValue> for String {
 /// }
 /// # cfg::init()
 /// ```
+///
+/// Meta
+/// ----
 ///
 /// If you want to read custom env name for variable you can change it manually.
 ///
@@ -186,6 +206,57 @@ impl From<EnvValue> for String {
 /// # fn main() {}
 /// ```
 ///
+/// Concatenate
+/// -----------
+///
+/// Try to concatenate env variable or strings or both to you env variable. It's easy!
+///
+/// ```rust
+/// # #[macro_use] extern crate itconfig;
+/// # use std::env;
+/// env::set_var("POSTGRES_USERNAME", "user");
+/// env::set_var("POSTGRES_PASSWORD", "pass");
+///
+/// config! {
+///     DATABASE_URL < (
+///         "postgres://",
+///         POSTGRES_USERNAME,
+///         ":",
+///         POSTGRES_PASSWORD,
+///         "@",
+///         POSTGRES_HOST => "localhost:5432",
+///         "/",
+///         POSTGRES_DB => "test",
+///     ),
+/// }
+///
+/// cfg::init();
+/// assert_eq!(cfg::DATABASE_URL(), "postgres://user:pass@localhost:5432/test".to_string())
+/// ```
+///
+/// Concatinated variables can be only strings and support all features like namespaces and meta.
+///
+/// ```rust
+/// # #[macro_use] extern crate itconfig;
+/// config! {
+///     CONCATED_NAMESPACE {
+///         #[env_name = "DATABASE_URL"]
+///         CONCAT_ENVVAR < (
+///             "postgres://",
+///             NOT_DEFINED_PG_USERNAME => "user",
+///             ":",
+///             NOT_DEFINED_PG_PASSWORD => "pass",
+///             "@",
+///             NOT_DEFINED_PG_HOST => "localhost:5432",
+///             "/",
+///             NOT_DEFINED_PG_DB => "test",
+///         ),
+///     }
+/// }
+///
+/// cfg::init();
+/// ```
+///
 /// ---
 ///
 /// This module will also contain helper method:
@@ -211,7 +282,7 @@ impl From<EnvValue> for String {
 ///
 /// config! {
 ///     DEBUG: bool => true,
-///     HOST: String => "127.0.0.1".to_string(),
+///     HOST: String => "127.0.0.1",
 /// }
 ///
 /// fn main () {
@@ -308,6 +379,29 @@ macro_rules! __itconfig_parse_variables {
         }
     };
 
+    // Find concatenated variable
+    (
+        tokens = [
+            $(#$meta:tt)*
+            $name:ident < ($($inner:tt)+),
+            $($rest:tt)*
+        ],
+        $($args:tt)*
+    ) => {
+        __itconfig_parse_variables! {
+            current_variable = {
+                unparsed_meta = [$(#$meta)*],
+                meta = [],
+                unparsed_concat = [$($inner)+],
+                concat = [],
+                name = $name,
+                ty = String,
+            },
+            tokens = [$($rest)*],
+            $($args)*
+        }
+    };
+
     // Find variable
     (
         tokens = [
@@ -321,6 +415,8 @@ macro_rules! __itconfig_parse_variables {
             current_variable = {
                 unparsed_meta = [$(#$meta)*],
                 meta = [],
+                unparsed_concat = [],
+                concat = [],
                 name = $name,
                 ty = $ty,
                 $(default = $default,)?
@@ -338,6 +434,8 @@ macro_rules! __itconfig_parse_variables {
                 $($rest:tt)*
             ],
             meta = $meta:tt,
+            unparsed_concat = $unparsed_concat:tt,
+            concat = $concat:tt,
             name = $name:ident,
             $($current_variable:tt)*
         },
@@ -347,6 +445,8 @@ macro_rules! __itconfig_parse_variables {
             current_variable = {
                 unparsed_meta = [$($rest)*],
                 meta = $meta,
+                unparsed_concat = $unparsed_concat,
+                concat = $concat,
                 name = $name,
                 env_name = $env_name,
                 $($current_variable)*
@@ -363,7 +463,6 @@ macro_rules! __itconfig_parse_variables {
                 $($rest:tt)*
             ],
             meta = [$(#$meta:tt,)*],
-            name = $name:ident,
             $($current_variable:tt)*
         },
         $($args:tt)*
@@ -372,7 +471,32 @@ macro_rules! __itconfig_parse_variables {
             current_variable = {
                 unparsed_meta = [$($rest)*],
                 meta = [$(#$meta,)* #$stranger_meta,],
-                name = $name,
+                $($current_variable)*
+            },
+            $($args)*
+        }
+    };
+
+    // Parse concat params
+    (
+        current_variable = {
+            unparsed_meta = $unparsed_meta:tt,
+            meta = $meta:tt,
+            unparsed_concat = [
+                $concat_param:tt$( => $default:expr)?,
+                $($rest:tt)*
+            ],
+            concat = [$($concat:expr,)*],
+            $($current_variable:tt)*
+        },
+        $($args:tt)*
+    ) => {
+        __itconfig_parse_variables! {
+            current_variable = {
+                unparsed_meta = $unparsed_meta,
+                meta = $meta,
+                unparsed_concat = [$($rest)*],
+                concat = [$($concat,)* __itconfig_concat_param!($concat_param$( => $default)?),],
                 $($current_variable)*
             },
             $($args)*
@@ -383,6 +507,8 @@ macro_rules! __itconfig_parse_variables {
     (
         current_variable = {
             unparsed_meta = [],
+            meta = $meta:tt,
+            unparsed_concat = [],
             $($current_variable:tt)*
         },
         tokens = $tokens:tt,
@@ -391,7 +517,7 @@ macro_rules! __itconfig_parse_variables {
     ) => {
         __itconfig_parse_variables! {
             tokens = $tokens,
-            variables = [$($variables,)* { $($current_variable)* },],
+            variables = [$($variables,)* { meta = $meta, $($current_variable)* },],
             $($args)*
         }
     };
@@ -445,12 +571,14 @@ macro_rules! __itconfig_impl {
     (
         variables = [$({
             meta = $var_meta:tt,
+            concat = $var_concat:tt,
             name = $var_name:ident,
             $($variable:tt)*
         },)*],
         namespaces = [$({
             variables = [$({
                 meta = $ns_var_meta:tt,
+                concat = $ns_var_concat:tt,
                 name = $ns_var_name:ident,
                 $($ns_variables:tt)*
             },)*],
@@ -464,10 +592,17 @@ macro_rules! __itconfig_impl {
     ) => {
         pub mod $mod_name {
             #![allow(non_snake_case)]
+            use std::env;
+            use itconfig::EnvValue;
+
             $(
                 pub mod $ns_name {
+                    use std::env;
+                    use itconfig::EnvValue;
+
                     $(__itconfig_variable! {
                         meta = $ns_var_meta,
+                        concat = $ns_var_concat,
                         name = $ns_var_name,
                         env_prefix = $ns_env_prefix,
                         $($ns_variables)*
@@ -483,6 +618,7 @@ macro_rules! __itconfig_impl {
 
             $(__itconfig_variable! {
                 meta = $var_meta,
+                concat = $var_concat,
                 name = $var_name,
                 env_prefix = $env_prefix,
                 $($variable)*
@@ -499,10 +635,34 @@ macro_rules! __itconfig_impl {
 
 #[macro_export]
 #[doc(hidden)]
+macro_rules! __itconfig_concat_param {
+    // Find env parameter with default value
+    ($env_name:ident => $default:expr) => {
+        __itconfig_variable_helper!(stringify!($env_name).to_uppercase(), $default, default)
+    };
+
+    // Find env parameter without default value
+    ($env_name:ident) => {
+        env_or!(stringify!($env_name).to_uppercase())
+    };
+
+    // Find string parameter
+    ($str:expr) => ( $str.to_string() );
+
+    // Invalid syntax
+    ($($tokens:tt)*) => {
+        __itconfig_invalid_syntax!();
+    };
+}
+
+
+#[macro_export]
+#[doc(hidden)]
 macro_rules! __itconfig_variable {
     // Set default env name
     (
         meta = $meta:tt,
+        concat = $concat:tt,
         name = $name:ident,
         env_prefix = $env_prefix:expr,
         ty = $ty:ty,
@@ -510,6 +670,7 @@ macro_rules! __itconfig_variable {
     ) => {
         __itconfig_variable! {
             meta = $meta,
+            concat = $concat,
             name = $name,
             env_prefix = $env_prefix,
             env_name = concat!($env_prefix, stringify!($name)).to_uppercase(),
@@ -518,9 +679,28 @@ macro_rules! __itconfig_variable {
         }
     };
 
-    // Add method
+    // Add method for concatenated variable
     (
         meta = [$(#$meta:tt,)*],
+        concat = [$($concat:expr,)+],
+        name = $name:ident,
+        env_prefix = $env_prefix:expr,
+        env_name = $env_name:expr,
+        ty = $ty:ty,
+        $($args:tt)*
+    ) => {
+        $(#$meta)*
+        pub fn $name() -> $ty {
+            let value_parts: Vec<String> = vec!($($concat),+);
+            let value = value_parts.join("");
+            __itconfig_variable_helper!(@setenv $env_name, value)
+        }
+    };
+
+    // Add method for env variable
+    (
+        meta = [$(#$meta:tt,)*],
+        concat = [],
         name = $name:ident,
         env_prefix = $env_prefix:expr,
         env_name = $env_name:expr,
@@ -556,29 +736,66 @@ macro_rules! __itconfig_variable {
 /// ```
 #[macro_export(local_inner_macro)]
 macro_rules! env_or {
+    // Env without default value
     ($env_name:expr) => {
-        env_or!($env_name, format!(r#"Cannot read "{}" environment variable"#, $env_name), panic);
+        __itconfig_variable_helper!($env_name, format!(r#"Cannot read "{}" environment variable"#, $env_name), panic);
     };
 
+    // Env with default value
     ($env_name:expr, $default:expr) => {
-        env_or!($env_name, $default, default);
+        __itconfig_variable_helper!($env_name, $default, setenv);
     };
 
+    // Invalid syntax
+    ($($tokens:tt)*) => {
+        __itconfig_env_or_invalid_syntax!();
+    };
+}
+
+
+#[macro_export]
+#[doc(hidden)]
+macro_rules! __itconfig_env_or_invalid_syntax {
+    () => {
+        compile_error!(
+            "Invalid `env_or!` syntax. Please see the `env_or!` macro docs for more info.\
+            `https://docs.rs/itconfig/latest/itconfig/macro.env_or.html`"
+        );
+    };
+}
+
+
+#[macro_export]
+#[doc(hidden)]
+macro_rules! __itconfig_variable_helper {
+    // Get env variable
     ($env_name:expr, $default:expr, $token:tt) => {{
         use std::env;
         use itconfig::EnvValue;
         env::var($env_name)
-            .map(|val| EnvValue::from(val).into())
-            .unwrap_or_else(|_| env_or!(@$token $env_name, $default))
+            .map(|val| __itconfig_variable_helper!(val))
+            .unwrap_or_else(|_| __itconfig_variable_helper!(@$token $env_name, $default))
     }};
 
-    (@default $env_name:expr, $default:expr) => {{
+    // Returns converted env variable
+    ($(@default $env_name:expr,)? $default:expr) => {{
+        EnvValue::from($default.to_string()).into()
+    }};
+
+    // Set default value for env variable and returns default
+    (@setenv $env_name:expr, $default:expr) => {{
         env::set_var($env_name, $default.to_string());
-        $default
+        __itconfig_variable_helper!($default)
     }};
 
+    // Make panic for env variable
     (@panic $env_name:expr, $default:expr) => {
         panic!($default);
+    };
+
+    // Invalid syntax
+    ($($tokens:tt)*) => {
+        __itconfig_env_or_invalid_syntax!();
     };
 }
 
