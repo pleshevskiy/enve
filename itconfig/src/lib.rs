@@ -412,7 +412,7 @@ macro_rules! __itconfig_parse_variables {
             unparsed_meta = $unparsed_meta:tt,
             meta = $meta:tt,
             unparsed_concat = [
-                $concat_param:tt,
+                $concat_param:tt$( => $default:expr)?,
                 $($rest:tt)*
             ],
             concat = [$($concat:expr,)*],
@@ -425,7 +425,7 @@ macro_rules! __itconfig_parse_variables {
                 unparsed_meta = $unparsed_meta,
                 meta = $meta,
                 unparsed_concat = [$($rest)*],
-                concat = [$($concat,)* __itconfig_concat_param!($concat_param),],
+                concat = [$($concat,)* __itconfig_concat_param!($concat_param$( => $default)?),],
                 $($current_variable)*
             },
             $($args)*
@@ -565,9 +565,20 @@ macro_rules! __itconfig_impl {
 #[macro_export]
 #[doc(hidden)]
 macro_rules! __itconfig_concat_param {
-    ($env:ident) => ( env_or!(stringify!($env).to_uppercase()) );
+    ($env_name:ident => $default:expr) => {
+        __itconfig_env_or!(stringify!($env_name).to_uppercase(), $default, default)
+    };
+
+    ($env_name:ident) => {
+        env_or!(stringify!($env_name).to_uppercase())
+    };
 
     ($str:expr) => ( $str.to_string() );
+
+    // Invalid syntax
+    ($($tokens:tt)*) => {
+        __itconfig_invalid_syntax!();
+    };
 }
 
 
@@ -607,7 +618,7 @@ macro_rules! __itconfig_variable {
         pub fn $name() -> $ty {
             let value_parts: Vec<String> = vec!($($concat),+);
             let value = value_parts.join("");
-            env_or!(@default $env_name, value)
+            __itconfig_env_or!(@setenv $env_name, value)
         }
     };
 
@@ -650,29 +661,61 @@ macro_rules! __itconfig_variable {
 /// ```
 #[macro_export(local_inner_macro)]
 macro_rules! env_or {
+    // Env without default value
     ($env_name:expr) => {
-        env_or!($env_name, format!(r#"Cannot read "{}" environment variable"#, $env_name), panic);
+        __itconfig_env_or!($env_name, format!(r#"Cannot read "{}" environment variable"#, $env_name), panic);
     };
 
+    // Env with default value
     ($env_name:expr, $default:expr) => {
-        env_or!($env_name, $default, default);
+        __itconfig_env_or!($env_name, $default, setenv);
     };
 
+    // Invalid syntax
+    ($($tokens:tt)*) => {
+        __itconfig_env_or_invalid_syntax!();
+    };
+}
+
+
+#[macro_export]
+#[doc(hidden)]
+macro_rules! __itconfig_env_or_invalid_syntax {
+    () => {
+        compile_error!(
+            "Invalid `env_or!` syntax. Please see the `env_or!` macro docs for more info.\
+            `https://docs.rs/itconfig/latest/itconfig/macro.env_or.html`"
+        );
+    };
+}
+
+
+#[macro_export]
+macro_rules! __itconfig_env_or {
     ($env_name:expr, $default:expr, $token:tt) => {{
         use std::env;
         use itconfig::EnvValue;
         env::var($env_name)
             .map(|val| EnvValue::from(val).into())
-            .unwrap_or_else(|_| env_or!(@$token $env_name, $default))
+            .unwrap_or_else(|_| __itconfig_env_or!(@$token $env_name, $default))
     }};
 
     (@default $env_name:expr, $default:expr) => {{
+        $default
+    }};
+
+    (@setenv $env_name:expr, $default:expr) => {{
         env::set_var($env_name, $default.to_string());
         $default
     }};
 
     (@panic $env_name:expr, $default:expr) => {
         panic!($default);
+    };
+
+    // Invalid syntax
+    ($($tokens:tt)*) => {
+        __itconfig_env_or_invalid_syntax!();
     };
 }
 

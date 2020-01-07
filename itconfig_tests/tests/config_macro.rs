@@ -315,3 +315,25 @@ fn concatenate_not_defined_environment_variables() {
     cfg::init();
 }
 
+
+#[test]
+fn default_value_for_concatenate_env_parameter() {
+    config! {
+        CONCATENATED_DATABASE_URL < (
+            "postgres://",
+            NOT_DEFINED_PG_USERNAME => "user".to_string(),
+            ":",
+            NOT_DEFINED_PG_PASSWORD => "pass".to_string(),
+            "@",
+            NOT_DEFINED_PG_HOST => "localhost:5432".to_string(),
+            "/",
+            NOT_DEFINED_PG_DB => "test".to_string(),
+        ),
+    }
+
+    cfg::init();
+    assert_eq!(
+        env::var("CONCATENATED_DATABASE_URL"),
+        Ok("postgres://user:pass@localhost:5432/test".to_string())
+    );
+}
