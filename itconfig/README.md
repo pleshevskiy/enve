@@ -58,6 +58,10 @@ fn main () {
 * [x] Support feature config and other meta directives
 * [x] Add default value to env if env is not found
 * [x] Concat env variables to one variable
+* [ ] Add nested namespaces
+* [ ] Support array type
+* [ ] Support hashmap type
+* [ ] Support custom env type
 
 
 ## License
