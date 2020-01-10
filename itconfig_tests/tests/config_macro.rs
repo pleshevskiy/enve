@@ -179,6 +179,39 @@ fn configuration_with_namespace() {
     assert_eq!(cfg::DB::HOST(), true);
 }
 
+#[test]
+fn configuration_with_nested_namespaces() {
+    config! {
+        FIRST {
+            SECOND {
+                THIRD {
+                    FOO: u32 => 50,
+                }
+            }
+        }
+    }
+
+    cfg::init();
+    assert_eq!(cfg::FIRST::SECOND::THIRD::FOO(), 50);
+}
+
+#[cfg(feature = "meta_namespace")]
+#[test]
+fn configuration_namespaces_with_custom_meta() {
+    config! {
+        FIRST {
+            #[cfg(feature = "meta_namespace")]
+            SECOND {
+                THIRD {
+                    FOO: u32 => 50,
+                }
+            }
+        }
+    }
+
+    cfg::init();
+    assert_eq!(cfg::FIRST::SECOND::THIRD::FOO(), 50);
+}
 
 #[test]
 fn configuration_variables_and_namespace_in_lowercase() {

@@ -10,3 +10,7 @@ publish = false
 
 [dependencies]
 itconfig = { path = '../itconfig' }
+
+[features]
+default = ["meta_namespace"]
+meta_namespace = []
