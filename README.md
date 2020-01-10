@@ -26,7 +26,9 @@ use std::env;
 //use dotenv::dotenv;
 
 config! {
-    DEBUG: bool => true,
+    DEBUG: bool => false,
+    
+    #[env_name = "APP_HOST"]
     HOST: String => "127.0.0.1",
     
     DATABASE_URL < (
@@ -39,27 +41,37 @@ config! {
         "/",
         POSTGRES_DB => "test",
     ),
-
-    NAMESPACE {
-        #[env_name = "MY_CUSTOM_NAME"]
-        FOO: bool,
+    
+    APP {
+        ARTICLE {
+            PER_PAGE: u32 => 15,
+        }
         
-        BAR: i32 => 10,
-        
-        #[cfg(feature = "feature")]
-        #[env_name = "POSTGRES_CONNECTION_STRING"]
-        DATABASE_URL: String
+        #[cfg(feature = "companies")]
+        COMPANY {
+            #[env_name = "INSTITUTIONS_PER_PAGE"]
+            PER_PAGE: u32 => 15,
+        }
+    }
+    
+    FEATURE {
+        NEW_MENU: bool => false,
+    
+        COMPANY {
+            PROFILE: bool => false,
+        }
     }
 }
 
 fn main () {
     // dotenv().ok();
-    env::set_var("MY_CUSTOM_NAME", "t");
+    env::set_var("FEATURE_NEW_MENU", "t");
     
     cfg::init();
     assert_eq!(cfg::HOST(), String::from("127.0.0.1"));
     assert_eq!(cfg::DATABASE_URL(), String::from("postgres://user:pass@localhost:5432/test"));
-    assert_eq!(cfg::NAMESPACE::FOO(), true);
+    assert_eq!(cfg::APP:ARTICLE:PER_PAGE(), 15);
+    assert_eq!(cfg::FEATURE::NEW_MENU(), true);
 }
 ```
 
@@ -77,10 +89,12 @@ cargo test
 * [x] Support feature config and other meta directives
 * [x] Add default value to env if env is not found
 * [x] Concat env variables to one variable
-* [ ] Add nested namespaces
+* [x] Add nested namespaces
+* [x] Support meta for namespaces
 * [ ] Support array type
 * [ ] Support hashmap type
 * [ ] Support custom env type
+* [ ] Common configuration for namespace variables
 
 
 ## License

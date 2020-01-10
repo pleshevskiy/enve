@@ -25,22 +25,36 @@
 //!         POSTGRES_DB => "test",
 //!     ),
 //!
-//!     NAMESPACE {
-//!         #[env_name = "MY_CUSTOM_NAME"]
-//!         FOO: bool,
+//!     APP {
+//!         ARTICLE {
+//!             PER_PAGE: u32 => 15,
+//!         }
 //!
-//!         BAR: i32 => 10,
+//!         #[cfg(feature = "companies")]
+//!         COMPANY {
+//!             #[env_name = "INSTITUTIONS_PER_PAGE"]
+//!             PER_PAGE: u32 => 15,
+//!         }
+//!     }
+//!
+//!     FEATURE {
+//!         NEW_MENU: bool => false,
+//!
+//!         COMPANY {
+//!             PROFILE: bool => false,
+//!         }
 //!     }
 //! }
 //!
 //! fn main () {
 //!     // dotenv().ok();
-//!     env::set_var("MY_CUSTOM_NAME", "t");
+//!     env::set_var("FEATURE_NEW_MENU", "t");
 //!
 //!     cfg::init();
 //!     assert_eq!(cfg::HOST(), String::from("127.0.0.1"));
 //!     assert_eq!(cfg::DATABASE_URL(), String::from("postgres://user:pass@localhost:5432/test"));
-//!     assert_eq!(cfg::NAMESPACE::FOO(), true);
+//!     assert_eq!(cfg::APP::ARTICLE::PER_PAGE(), 15);
+//!     assert_eq!(cfg::FEATURE::NEW_MENU(), true);
 //! }
 //! ```
 
@@ -163,6 +177,41 @@ impl From<EnvValue> for String {
 ///     }
 /// }
 /// # cfg::init()
+/// ```
+///
+/// Now you can use nested structure in namespaces without limits :)
+///
+/// ```rust
+/// # #[macro_use] extern crate itconfig;
+/// config! {
+///     FIRST {
+///         SECOND {
+///             THIRD {
+///                 FOO: bool => true,
+///             }
+///         }
+///     }
+/// }
+/// # cfg::init();
+/// ```
+///
+/// Namespaces supports custom meta
+///
+/// ```rust
+/// # #[macro_use] extern crate itconfig;
+/// config! {
+///     #[cfg(feature = "first")]
+///     FIRST {
+///         #[cfg(feature = "second")]
+///         SECOND {
+///             #[cfg(feature = "third")]
+///             THIRD {
+///                 FOO: bool => true,
+///             }
+///         }
+///     }
+/// }
+/// # cfg::init();
 /// ```
 ///
 /// Meta
@@ -343,6 +392,7 @@ macro_rules! __itconfig_parse_module {
             module = {
                 env_prefix = "",
                 name = $name,
+                meta = [],
             },
         }
     };
@@ -360,6 +410,7 @@ macro_rules! __itconfig_parse_variables {
     // Find namespace
     (
         tokens = [
+            $(#$meta:tt)*
             $ns_name:ident { $($ns_tokens:tt)* }
             $($rest:tt)*
         ],
@@ -368,9 +419,11 @@ macro_rules! __itconfig_parse_variables {
         __itconfig_parse_variables! {
             tokens = [$($ns_tokens)*],
             variables = [],
+            namespaces = [],
             module = {
                 env_prefix = concat!(stringify!($ns_name), "_"),
                 name = $ns_name,
+                meta = [$(#$meta)*],
             },
             callback = {
                 tokens = [$($rest)*],
@@ -526,9 +579,8 @@ macro_rules! __itconfig_parse_variables {
     (
         tokens = [],
         variables = $ns_variables:tt,
-        module = {
-            $($current_namespace:tt)*
-        },
+        namespaces = $ns_namespaces:tt,
+        module = $ns_module:tt,
         callback = {
             tokens = $tokens:tt,
             variables = $variables:tt,
@@ -543,7 +595,8 @@ macro_rules! __itconfig_parse_variables {
                 $($namespaces,)*
                 {
                     variables = $ns_variables,
-                    $($current_namespace)*
+                    namespaces = $ns_namespaces,
+                    module = $ns_module,
                 },
             ],
             $($args)*
@@ -555,7 +608,7 @@ macro_rules! __itconfig_parse_variables {
         tokens = [],
         $($args:tt)*
     ) => {
-        __itconfig_impl!($($args)*);
+        __itconfig_impl_namespace!($($args)*);
     };
 
     // Invalid syntax
@@ -567,7 +620,7 @@ macro_rules! __itconfig_parse_variables {
 
 #[macro_export]
 #[doc(hidden)]
-macro_rules! __itconfig_impl {
+macro_rules! __itconfig_impl_namespace {
     (
         variables = [$({
             meta = $var_meta:tt,
@@ -576,44 +629,42 @@ macro_rules! __itconfig_impl {
             $($variable:tt)*
         },)*],
         namespaces = [$({
-            variables = [$({
-                meta = $ns_var_meta:tt,
-                concat = $ns_var_concat:tt,
-                name = $ns_var_name:ident,
-                $($ns_variables:tt)*
-            },)*],
-            env_prefix = $ns_env_prefix:expr,
-            name = $ns_name:ident,
+            variables = $ns_variable:tt,
+            namespaces = $ns_namespaces:tt,
+            module = {
+                env_prefix = $ns_env_prefix:expr,
+                name = $ns_mod_name:ident,
+                meta = [$(#$ns_meta:tt)*],
+            },
         },)*],
         module = {
             env_prefix = $env_prefix:expr,
             name = $mod_name:ident,
+            meta = [$(#$meta:tt)*],
         },
     ) => {
+        $(#$meta)*
         pub mod $mod_name {
             #![allow(non_snake_case)]
             use std::env;
             use itconfig::EnvValue;
 
-            $(
-                pub mod $ns_name {
-                    use std::env;
-                    use itconfig::EnvValue;
-
-                    $(__itconfig_variable! {
-                        meta = $ns_var_meta,
-                        concat = $ns_var_concat,
-                        name = $ns_var_name,
-                        env_prefix = $ns_env_prefix,
-                        $($ns_variables)*
-                    })*
-                }
-            )*
+            $(__itconfig_impl_namespace! {
+                variables = $ns_variable,
+                namespaces = $ns_namespaces,
+                module = {
+                    env_prefix = $ns_env_prefix,
+                    name = $ns_mod_name,
+                    meta = [$(#$ns_meta)*],
+                },
+            })*
 
             pub fn init() {
                 $($var_name();)*
-
-                $($($ns_name::$ns_var_name();)*)*
+                $(
+                    $(#$ns_meta)*
+                    $ns_mod_name::init();
+                )*
             }
 
             $(__itconfig_variable! {
