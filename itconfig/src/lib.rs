@@ -3,6 +3,15 @@
 //! Simple configuration with macro for rust application.
 //!
 //!
+//! ## Motivation
+//!
+//! I began to use rust with web programming experience where environment variables are widely used
+//! and often there are more then 50 of them. First I looked at already created libraries.
+//! But there it's necessary to initialise structure that needs to be moved to each function
+//! where you need variable. It uses little bit memory, but configuration lifetime is as long
+//! as application lifetime. Because of it I decided to create my own library.
+//!
+//!
 //! ## Example usage
 //!
 //! ```rust
