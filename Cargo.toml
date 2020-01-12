@@ -3,5 +3,11 @@ members = [
     "itconfig",
     "itconfig_tests",
     "examples/diesel",
-#    "examples/rocket",
+    "examples/rocket",
+    "examples/hyper",
+]
+
+default-members = [
+    "itconfig",
+    "itconfig_tests",
 ]
