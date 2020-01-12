@@ -1,5 +1,3 @@
-#![deny(warnings)]
-
 #[macro_use]
 extern crate itconfig;
 
@@ -12,6 +10,8 @@ use hyper::{header, Body, Client, Method, Request, Response, Server, StatusCode}
 
 config! {
     HYPER {
+        PREFER_SCHEMA: String => "http",
+
         HOST < (
             ADDR => "127.0.0.1",
             ":",
@@ -19,7 +19,8 @@ config! {
         ),
 
         JSON_API_URL < (
-            "http://",
+            HYPER_PREFER_SCHEMA,
+            "://",
             HYPER_HOST,
             "/json_api",
         ),
@@ -31,10 +32,10 @@ type GenericError = Box<dyn std::error::Error + Send + Sync>;
 type HyperResult<T> = std::result::Result<T, GenericError>;
 
 
-static INDEX: &[u8] = b"<a href=\"test.html\">test.html</a>";
-static INTERNAL_SERVER_ERROR: &[u8] = b"Internal Server Error";
-static NOTFOUND: &[u8] = b"Not Found";
-static POST_DATA: &str = r#"{"original": "data"}"#;
+const INDEX: &'static [u8] = b"<a href=\"test.html\">test.html</a>";
+const INTERNAL_SERVER_ERROR: &'static [u8] = b"Internal Server Error";
+const NOTFOUND: &'static [u8] = b"Not Found";
+const POST_DATA: &'static str = r#"{"original": "data"}"#;
 
 
 async fn client_request_response(client: &Client<HttpConnector>) -> HyperResult<Response<Body>> {
@@ -42,7 +43,7 @@ async fn client_request_response(client: &Client<HttpConnector>) -> HyperResult<
         .method(Method::POST)
         .uri(cfg::HYPER::JSON_API_URL())
         .header(header::CONTENT_TYPE, "application/json")
-        .body(POST_DATA.into())
+        .body(Body::from(POST_DATA))
         .unwrap();
 
     let web_res = client.request(req).await?;
@@ -104,7 +105,7 @@ async fn response_examples(
             // Return 404 not found response.
             Ok(Response::builder()
                 .status(StatusCode::NOT_FOUND)
-                .body(NOTFOUND.into())
+                .body(Body::from(NOTFOUND))
                 .unwrap())
         }
     }
@@ -112,6 +113,7 @@ async fn response_examples(
 
 #[tokio::main]
 async fn main() -> HyperResult<()> {
+    cfg::init();
     pretty_env_logger::init();
 
     let addr = cfg::HYPER::HOST().parse().unwrap();
