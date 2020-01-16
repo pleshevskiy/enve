@@ -6,7 +6,7 @@ extern crate itconfig;
 
 
 #[test]
-#[should_panic(expected = "Cannot read \"MISS_VARIABLE\" environment variable")]
+#[should_panic(expected = "Environment variable \"MISS_VARIABLE\" is missing")]
 fn should_panic_if_miss_env_variable() {
     config! {
         MISS_VARIABLE: bool,
@@ -334,7 +334,7 @@ fn setting_default_concat_env_variable() {
 
 
 #[test]
-#[should_panic(expected = "Cannot read \"PG_USERNAME\" environment variable")]
+#[should_panic(expected = "Environment variable \"PG_USERNAME\" is missing")]
 fn concatenate_not_defined_environment_variables() {
     config! {
         DATABASE_URL < (
