@@ -1,7 +1,7 @@
 # itconfig
 [![Build Status](https://travis-ci.org/icetemple/itconfig-rs.svg?branch=master)](https://travis-ci.org/icetemple/itconfig-rs)
 [![Documentation](https://docs.rs/itconfig/badge.svg)](https://docs.rs/itconfig)
-[![Crates.io](https://img.shields.io/badge/crates.io-v0.8.0-orange.svg?longCache=true)](https://crates.io/crates/itconfig) 
+[![Crates.io](https://img.shields.io/badge/crates.io-v0.9.0-orange.svg?longCache=true)](https://crates.io/crates/itconfig) 
 [![Join the chat at https://gitter.im/icetemple/itconfig-rs](https://badges.gitter.im/icetemple/itconfig-rs.svg)](https://gitter.im/icetemple/itconfig-rs?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 Easy build a configs from environment variables and use it in globally.
