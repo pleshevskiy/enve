@@ -5,9 +5,6 @@ use itconfig::*;
 fn missing_env_variable() {
     let flag: bool = get_env_or_default("DEFAULT_TEST_CASE_1", "true");
     assert_eq!(flag, true);
-
-//    let var: String = env::var("DEFAULT_TEST_CASE_1").unwrap();
-//    assert_eq!(var, "true");
 }
 
 #[test]

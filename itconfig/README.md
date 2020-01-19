@@ -63,6 +63,24 @@ fn main () {
 ```
 
 
+Macro is an optional feature, enabled by default. You can install itconfig without default
+features and use this lib as shown below
+
+```rust
+use itconfig::*;
+use std::env;
+// use dotenv::dotenv;
+
+fn main() {
+    env::set_var("DATABASE_URL", "postgres://127.0.0.1:5432/test");
+
+    let database_url = get_env::<String>("DATABASE_URL").unwrap();
+    let new_profile: bool = get_env_or_default("FEATURE_NEW_PROFILE", false);
+    let articles_per_page: u32 = get_env_or_set_default("ARTICLES_PER_PAGE", 10);
+}
+```
+
+
 ## Roadmap
 
 * [x] Add namespace for variables

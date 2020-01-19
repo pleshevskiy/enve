@@ -1,7 +1,7 @@
 # itconfig
 [![Build Status](https://travis-ci.org/icetemple/itconfig-rs.svg?branch=master)](https://travis-ci.org/icetemple/itconfig-rs)
 [![Documentation](https://docs.rs/itconfig/badge.svg)](https://docs.rs/itconfig)
-[![Crates.io](https://img.shields.io/badge/crates.io-v0.9.0-orange.svg?longCache=true)](https://crates.io/crates/itconfig) 
+[![Crates.io](https://img.shields.io/badge/crates.io-v0.10.0-orange.svg?longCache=true)](https://crates.io/crates/itconfig) 
 [![Join the chat at https://gitter.im/icetemple/itconfig-rs](https://badges.gitter.im/icetemple/itconfig-rs.svg)](https://gitter.im/icetemple/itconfig-rs?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 Easy build a configs from environment variables and use it in globally.
@@ -72,6 +72,24 @@ fn main () {
     assert_eq!(cfg::DATABASE_URL(), String::from("postgres://user:pass@localhost:5432/test"));
     assert_eq!(cfg::APP:ARTICLE:PER_PAGE(), 15);
     assert_eq!(cfg::FEATURE::NEW_MENU(), true);
+}
+```
+
+
+Macro is an optional feature, enabled by default. You can install itconfig without default
+features and use this lib as shown below
+
+```rust
+use itconfig::*;
+use std::env;
+// use dotenv::dotenv;
+
+fn main() {
+    env::set_var("DATABASE_URL", "postgres://127.0.0.1:5432/test");
+
+    let database_url = get_env::<String>("DATABASE_URL").unwrap();
+    let new_profile: bool = get_env_or_default("FEATURE_NEW_PROFILE", false);
+    let articles_per_page: u32 = get_env_or_set_default("ARTICLES_PER_PAGE", 10);
 }
 ```
 

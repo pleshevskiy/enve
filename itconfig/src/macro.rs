@@ -1,3 +1,6 @@
+
+/// ### _This API requires the following crate features to be activated: `macro`_
+///
 /// Creates new public mod with function fo get each environment variable of mapping.
 ///
 /// All variables are required and program will panic if some variables haven't value, but you
@@ -589,9 +592,7 @@ macro_rules! __itconfig_concat_param {
 
     // Find env parameter without default value
     ($env_name:ident) => (
-        itconfig::get_env(
-            stringify!($env_name).to_uppercase().as_str()
-        )
+        itconfig::get_env_or_panic(stringify!($env_name).to_uppercase().as_str())
     );
 
     // Find string parameter
@@ -627,24 +628,6 @@ macro_rules! __itconfig_variable {
         }
     };
 
-    // Add method for concatenated variable
-//    (
-//        meta = [$(#$meta:tt,)*],
-//        concat = [$($concat:expr,)+],
-//        name = $name:ident,
-//        env_prefix = $env_prefix:expr,
-//        env_name = $env_name:expr,
-//        ty = $ty:ty,
-//        $($args:tt)*
-//    ) => {
-//        $(#$meta)*
-//        pub fn $name() -> $ty {
-//            let value_parts: Vec<String> = vec!($($concat),+);
-//            let value = value_parts.join("");
-//            __itconfig_variable_helper!(@setenv $env_name, value)
-//        }
-//    };
-
     // Add method for env variable
     (
         meta = [$(#$meta:tt,)*],
@@ -666,6 +649,7 @@ macro_rules! __itconfig_variable {
         }
     };
 
+    // Concatenate function body
     (
         @inner
         concat = [$($concat:expr,)+],
@@ -678,14 +662,16 @@ macro_rules! __itconfig_variable {
         value
     );
 
+    // Env without default
     (
         @inner
         concat = [],
         env_name = $env_name:expr,
     ) => (
-        itconfig::get_env($env_name.to_string().as_str())
+        itconfig::get_env_or_panic($env_name.to_string().as_str())
     );
 
+    // Env with default
     (
         @inner
         concat = [],

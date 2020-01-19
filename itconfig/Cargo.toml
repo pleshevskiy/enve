@@ -1,6 +1,6 @@
 [package]
 name = "itconfig"
-version = "0.9.0"
+version = "0.10.0"
 authors = ["Dmitriy Pleshevskiy <dmitriy@ideascup.me>"]
 description = "Easy build a configs from environment variables and use it in globally."
 categories = ["config", "web-programming"]
@@ -19,6 +19,7 @@ travis-ci = { repository = "icetemple/itconfig-rs" }
 maintenance = { status = "actively-developed" }
 
 [dependencies]
+failure = { version = "0.1.6", features = ["derive"]}
 
 [features]
 default = ['macro']

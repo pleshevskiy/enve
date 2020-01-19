@@ -5,7 +5,6 @@ extern crate rocket;
 #[macro_use]
 extern crate itconfig;
 
-use rocket::config::{Config, Environment};
 
 config! {
     ROCKET {
