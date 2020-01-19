@@ -96,6 +96,7 @@ fn main() {
 * [ ] Common configuration for namespace variables
 
 
+
 ## License
 
 [MIT] © [Ice Temple](https://github.com/icetemple)

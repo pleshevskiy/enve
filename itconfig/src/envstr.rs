@@ -1,5 +1,4 @@
 use std::ops::Deref;
-use std::str::FromStr;
 
 
 #[doc(hidden)]
@@ -29,10 +28,11 @@ impl<T> ToEnvString for T
 
 #[doc(hidden)]
 macro_rules! from_env_string_numbers_impl {
-    ($($ty:ty),+) => {
+    ($($ty:ty => $feature:expr),+) => {
         $(
+            #[cfg(feature = $feature)]
             impl FromEnvString for $ty {
-                type Err = <$ty as FromStr>::Err;
+                type Err = <$ty as std::str::FromStr>::Err;
 
                 #[inline]
                 fn from_env_string(s: &EnvString) -> Result<Self, Self::Err> {
@@ -44,12 +44,24 @@ macro_rules! from_env_string_numbers_impl {
 }
 
 from_env_string_numbers_impl![
-    i8, i16, i32, i64, i128, isize,
-    u8, u16, u32, u64, u128, usize,
-    f32, f64
+    i8    => "i8",
+    i16   => "i16",
+    i32   => "i32",
+    i64   => "i64",
+    i128  => "i128",
+    isize => "isize",
+    u8    => "u8",
+    u16   => "u16",
+    u32   => "u32",
+    u64   => "u64",
+    u128  => "u128",
+    usize => "usize",
+    f32   => "f32",
+    f64   => "f64"
 ];
 
 
+#[cfg(feature = "bool")]
 impl FromEnvString for bool {
     type Err = ();
 
