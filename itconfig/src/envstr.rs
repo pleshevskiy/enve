@@ -74,6 +74,42 @@ impl FromEnvString for bool {
 }
 
 
+
+#[cfg(feature = "array")]
+pub enum ArrayEnvError {
+    InvalidType,
+    FailedToParse,
+}
+
+
+#[cfg(feature = "array")]
+impl<T> FromEnvString for Vec<T>
+    where T: FromEnvString
+{
+    type Err = ArrayEnvError;
+
+    fn from_env_string(s: &EnvString) -> Result<Self, Self::Err> {
+        serde_json::from_str::<Vec<isize>>(s.trim())
+            .map(|vec| {
+                vec.iter().map(|v| v.to_string()).collect::<Vec<String>>()
+            })
+            .or_else(|_| {
+                serde_json::from_str::<Vec<String>>(s.trim())
+            })
+            .map_err(|_| ArrayEnvError::InvalidType)
+            .and_then(|vec| {
+                vec.iter()
+                    .map(|v| {
+                        v.to_env_string()
+                            .parse::<T>()
+                            .map_err(|_| ArrayEnvError::FailedToParse)
+                    })
+                    .collect::<Result<Vec<T>, _>>()
+            })
+    }
+}
+
+
 impl FromEnvString for String {
     type Err = ();
 
