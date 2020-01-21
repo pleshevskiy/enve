@@ -1,6 +1,6 @@
 [package]
 name = "itconfig"
-version = "0.10.1"
+version = "0.10.2"
 authors = ["Dmitriy Pleshevskiy <dmitriy@ideascup.me>"]
 description = "Easy build a configs from environment variables and use it in globally."
 categories = ["config", "web-programming"]
@@ -14,17 +14,17 @@ readme = "README.md"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
-[badges]
-travis-ci = { repository = "icetemple/itconfig-rs" }
-maintenance = { status = "actively-developed" }
-
 [dependencies]
 failure = { version = "0.1.6", features = ["derive"]}
+serde_json = { version = "1.0.44", optional = true }
 
 [features]
-default = ["macro", "numbers", "bool"]
+default = ["macro", "primitives"]
 macro = []
 
+array = ["serde_json"]
+
+primitives = ["numbers", "bool"]
 numbers = ["int", "uint", "float"]
 int = ["i8", "i16", "i32", "i64", "i128", "isize"]
 uint = ["u8", "u16", "u32", "u64", "u128", "usize"]
@@ -48,3 +48,8 @@ f32   = []
 f64   = []
 
 bool  = []
+
+
+[badges]
+travis-ci = { repository = "icetemple/itconfig-rs" }
+maintenance = { status = "actively-developed" }

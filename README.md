@@ -109,10 +109,37 @@ cargo test
 * [x] Concat env variables to one variable
 * [x] Add nested namespaces
 * [x] Support meta for namespaces
-* [ ] Support array type
+* [x] Support array type
 * [ ] Support hashmap type
 * [ ] Support custom env type
 * [ ] Common configuration for namespace variables
+
+
+## Available features
+
+* default = ["macro", "primitives"]
+* macro = []
+* array = ["serde_json"]
+* primitives = ["numbers", "bool"]
+* numbers = ["int", "uint", "float"]
+* int = ["i8", "i16", "i32", "i64", "i128", "isize"]
+* uint = ["u8", "u16", "u32", "u64", "u128", "usize"]
+* float = ["f32", "f64"]
+* i8    = []
+* i16   = []
+* i32   = []
+* i64   = []
+* i128  = []
+* isize = []
+* u8    = []
+* u16   = []
+* u32   = []
+* u64   = []
+* u128  = []
+* usize = []
+* f32   = []
+* f64   = []
+* bool  = []
 
 
 ## License
