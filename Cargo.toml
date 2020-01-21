@@ -1,7 +1,7 @@
 [workspace]
 members = [
     "itconfig",
-    "itconfig_tests",
+    "itconfig-tests",
     "examples/diesel",
     "examples/rocket", # nightly
     "examples/hyper",
@@ -9,5 +9,5 @@ members = [
 
 default-members = [
     "itconfig",
-    "itconfig_tests",
+    "itconfig-tests",
 ]
