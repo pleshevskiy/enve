@@ -10,7 +10,13 @@ publish = false
 
 [dependencies]
 itconfig = { path = '../itconfig' }
+criterion = "0.3.1"
+lazy_static = "1.4.0"
 
 [features]
 default = ["meta_namespace"]
 meta_namespace = []
+
+[[bench]]
+name = "main_benches"
+harness = false
