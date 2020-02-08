@@ -18,7 +18,7 @@ config! {
             PORT => 8000,
         ),
 
-        JSON_API_URL < (
+        static JSON_API_URL < (
             HYPER_PREFER_SCHEMA,
             "://",
             HYPER_HOST,

@@ -10,7 +10,7 @@ config! {
     ROCKET {
         HOST: String => "localhost",
         PORT: u16 => 9000,
-        BASE_URL: String => "/",
+        BASE_URL => "/",
     }
 }
 
@@ -24,6 +24,6 @@ fn main() {
     cfg::init();
 
     rocket::ignite()
-        .mount(&cfg::ROCKET::BASE_URL(), routes![index])
+        .mount(cfg::ROCKET::BASE_URL(), routes![index])
         .launch();
 }

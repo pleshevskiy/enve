@@ -13,7 +13,7 @@ use crate::models::*;
 
 
 config! {
-    DATABASE_URL: String,
+    DATABASE_URL,
 }
 
 
