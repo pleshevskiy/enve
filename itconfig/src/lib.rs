@@ -87,12 +87,14 @@
 
 
 // Rustc lints.
-#![deny(unused_imports)]
+//#![deny(unused_imports)]
 
 /////////////////////////////////////////////////////////////////////////////
 
 #[macro_use]
 extern crate failure;
+#[cfg(feature = "static")]
+extern crate lazy_static;
 
 mod enverr;
 mod getenv;
@@ -108,7 +110,7 @@ pub mod prelude {
 
 
 #[cfg(feature = "macro")]
-#[allow(unused_imports)]
+//#[allow(unused_imports)]
 #[macro_use]
 mod r#macro;
 #[cfg(feature = "macro")]

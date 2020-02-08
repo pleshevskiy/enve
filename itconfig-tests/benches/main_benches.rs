@@ -3,11 +3,13 @@ use std::env;
 
 #[macro_use]
 extern crate lazy_static;
+#[macro_use]
+extern crate itconfig;
 
 
 
-fn setup_env_var(initial: &String) {
-    env::set_var("TEST", initial);
+fn setup_env_var(key: &'static str, initial: String) {
+    env::set_var(key, initial);
 }
 
 
@@ -26,33 +28,66 @@ fn lazy_get_env() -> u32 {
 
 
 fn source_vs_lazy(c: &mut Criterion) {
-    let source = Fun::new("source", |b, initial: &String| {
-        setup_env_var(initial);
-        let int: u32 = initial.parse().unwrap();
+    setup_env_var("TEST", "1".to_string());
 
+    let source = Fun::new("source", |b, _| {
         b.iter(move || {
-            assert_eq!(source_get_env(), int)
+            assert_eq!(source_get_env(), 1)
         })
     });
-    let lazy = Fun::new("lazy", |b, initial: &String| {
-        setup_env_var(initial);
-        let int: u32 = initial.parse().unwrap();
-
+    let lazy = Fun::new("lazy", |b, _| {
         b.iter(move || {
-            assert_eq!(lazy_get_env(), int);
+            assert_eq!(lazy_get_env(), 1);
         })
     });
 
-    let funcs = vec![source, lazy];
-
-    c.bench_functions("get_env", funcs, "1".to_string());
+    c.bench_functions("get_env", vec![source, lazy], 0);
 }
 
+
+fn source_macro_vs_lazy_macro(c: &mut Criterion) {
+    config! {
+        TEST: &'static str,
+        TEST_WITH_DEFAULT: &'static str => "default",
+
+        static LAZY_TEST: &'static str,
+        static LAZY_TEST_WITH_DEFAULT: &'static str => "default",
+    }
+
+    setup_env_var("TEST", "test".to_string());
+    setup_env_var("LAZY_TEST", "test".to_string());
+
+    let source = Fun::new("source", |b, _| {
+        b.iter(move || {
+            assert_eq!(cfg::TEST(), "test");
+        })
+    });
+    let lazy = Fun::new("lazy", |b, _| {
+        b.iter(move || {
+            assert_eq!(cfg::LAZY_TEST(), "test");
+        })
+    });
+    let source_with_default = Fun::new("source_with_default", |b, _| {
+        b.iter(move || {
+            assert_eq!(cfg::TEST_WITH_DEFAULT(), "default");
+        })
+    });
+    let lazy_with_default = Fun::new("lazy_with_default", |b, _| {
+        b.iter(move || {
+            assert_eq!(cfg::LAZY_TEST_WITH_DEFAULT(), "default");
+        })
+    });
+
+    let funcs = vec![source, lazy, source_with_default, lazy_with_default];
+
+    c.bench_functions("macro", funcs, 0);
+}
 
 
 criterion_group! {
     benches,
     source_vs_lazy,
+    source_macro_vs_lazy_macro,
 }
 
 criterion_main!(benches);

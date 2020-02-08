@@ -1,6 +1,6 @@
 [package]
 name = "itconfig"
-version = "0.10.2"
+version = "0.11.0"
 authors = ["Dmitriy Pleshevskiy <dmitriy@ideascup.me>"]
 description = "Easy build a configs from environment variables and use it in globally."
 categories = ["config", "web-programming"]
@@ -16,11 +16,14 @@ readme = "README.md"
 
 [dependencies]
 failure = { version = "0.1.6", features = ["derive"]}
+lazy_static = { version = "1.4.0", optional = true }
 serde_json = { version = "1.0.44", optional = true }
 
 [features]
-default = ["macro", "primitives"]
+default = ["macro", "primitives", "static"]
+
 macro = []
+static = ["lazy_static"]
 
 array = ["serde_json"]
 

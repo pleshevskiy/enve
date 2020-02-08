@@ -119,6 +119,15 @@ impl FromEnvString for String {
 }
 
 
+impl FromEnvString for &'static str {
+    type Err = ();
+
+    fn from_env_string(s: &EnvString) -> Result<Self, Self::Err> {
+        Ok(Box::leak(s.0.clone().into_boxed_str()))
+    }
+}
+
+
 #[doc(hidden)]
 #[derive(Debug, PartialEq, Clone)]
 pub struct EnvString(String);

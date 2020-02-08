@@ -14,8 +14,9 @@ criterion = "0.3.1"
 lazy_static = "1.4.0"
 
 [features]
-default = ["meta_namespace"]
+default = ["meta_namespace", "static"]
 meta_namespace = []
+static = ["itconfig/static"]
 
 [[bench]]
 name = "main_benches"

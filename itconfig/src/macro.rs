@@ -303,6 +303,14 @@ macro_rules! __itconfig_parse_module {
 
 #[macro_export]
 #[doc(hidden)]
+macro_rules! __itconfig_get_ty_or_default {
+    () => { &'static str };
+    ($ty:ty) => { $ty };
+}
+
+
+#[macro_export]
+#[doc(hidden)]
 macro_rules! __itconfig_parse_variables {
     // Find namespace
     (
@@ -329,6 +337,30 @@ macro_rules! __itconfig_parse_variables {
         }
     };
 
+    // Find static concatenated variable
+    (
+        tokens = [
+            $(#$meta:tt)*
+            static $name:ident < ($($inner:tt)+),
+            $($rest:tt)*
+        ],
+        $($args:tt)*
+    ) => {
+        __itconfig_parse_variables! {
+            current_variable = {
+                unparsed_meta = [$(#$meta)*],
+                meta = [],
+                unparsed_concat = [$($inner)+],
+                concat = [],
+                name = $name,
+                ty = String,
+                is_static = true,
+            },
+            tokens = [$($rest)*],
+            $($args)*
+        }
+    };
+
     // Find concatenated variable
     (
         tokens = [
@@ -346,17 +378,18 @@ macro_rules! __itconfig_parse_variables {
                 concat = [],
                 name = $name,
                 ty = String,
+                is_static = false,
             },
             tokens = [$($rest)*],
             $($args)*
         }
     };
 
-    // Find variable
+    // Find static variable
     (
         tokens = [
             $(#$meta:tt)*
-            $name:ident : $ty:ty$( => $default:expr)?,
+            static $name:ident $(: $ty:ty)? $(=> $default:expr)?,
             $($rest:tt)*
         ],
         $($args:tt)*
@@ -368,7 +401,33 @@ macro_rules! __itconfig_parse_variables {
                 unparsed_concat = [],
                 concat = [],
                 name = $name,
-                ty = $ty,
+                ty = __itconfig_get_ty_or_default!($($ty)?),
+                is_static = true,
+                $(default = $default,)?
+            },
+            tokens = [$($rest)*],
+            $($args)*
+        }
+    };
+
+    // Find variable
+    (
+        tokens = [
+            $(#$meta:tt)*
+            $name:ident $(: $ty:ty)? $(=> $default:expr)?,
+            $($rest:tt)*
+        ],
+        $($args:tt)*
+    ) => {
+        __itconfig_parse_variables! {
+            current_variable = {
+                unparsed_meta = [$(#$meta)*],
+                meta = [],
+                unparsed_concat = [],
+                concat = [],
+                name = $name,
+                ty = __itconfig_get_ty_or_default!($($ty)?),
+                is_static = false,
                 $(default = $default,)?
             },
             tokens = [$($rest)*],
@@ -523,6 +582,9 @@ macro_rules! __itconfig_impl_namespace {
             meta = $var_meta:tt,
             concat = $var_concat:tt,
             name = $var_name:ident,
+            $(env_name = $env_name:expr,)?
+            ty = $ty:ty,
+            is_static = $is_static:ident,
             $($variable:tt)*
         },)*],
         namespaces = [$({
@@ -543,6 +605,8 @@ macro_rules! __itconfig_impl_namespace {
         $(#$meta)*
         pub mod $mod_name {
             #![allow(non_snake_case)]
+            #[cfg(feature = "static")]
+            use lazy_static::lazy_static;
 
             $(__itconfig_impl_namespace! {
                 variables = $ns_variable,
@@ -567,6 +631,9 @@ macro_rules! __itconfig_impl_namespace {
                 concat = $var_concat,
                 name = $var_name,
                 env_prefix = $env_prefix,
+                $(env_name = $env_name,)?
+                ty = $ty,
+                is_static = $is_static,
                 $($variable)*
             })*
         }
@@ -630,24 +697,61 @@ macro_rules! __itconfig_variable {
 
     // Add method for env variable
     (
-        meta = [$(#$meta:tt,)*],
+        meta = $meta:tt,
         concat = $concat:tt,
         name = $name:ident,
         env_prefix = $env_prefix:expr,
         env_name = $env_name:expr,
         ty = $ty:ty,
+        is_static = $is_static:ident,
         $(default = $default:expr,)?
     ) => {
-        $(#$meta)*
-        pub fn $name() -> $ty {
-            __itconfig_variable! {
+        __itconfig_variable!(
+            @wrap
+            is_static = $is_static,
+            meta = $meta,
+            name = $name,
+            ty = $ty,
+            value = __itconfig_variable!(
                 @inner
                 concat = $concat,
                 env_name = $env_name,
                 $(default = $default,)?
-            }
-        }
+            ),
+        );
     };
+
+    // Wrap static variables
+    (
+        @wrap
+        is_static = true,
+        meta = [$(#$meta:tt,)*],
+        name = $name:ident,
+        ty = $ty:ty,
+        value = $value:expr,
+    ) => (
+        $(#$meta)*
+        pub fn $name() -> $ty {
+            lazy_static! {
+                static ref $name: $ty = $value;
+            }
+
+            (*$name).clone()
+        }
+    );
+
+    // Wrap functions
+    (
+        @wrap
+        is_static = false,
+        meta = [$(#$meta:tt,)*],
+        name = $name:ident,
+        ty = $ty:ty,
+        value = $value:expr,
+    ) => (
+        $(#$meta)*
+        pub fn $name() -> $ty { $value }
+    );
 
     // Concatenate function body
     (
@@ -655,12 +759,12 @@ macro_rules! __itconfig_variable {
         concat = [$($concat:expr,)+],
         env_name = $env_name:expr,
         $($args:tt)*
-    ) => (
+    ) => ({
         let value_parts: Vec<String> = vec!($($concat),+);
         let value = value_parts.join("");
         std::env::set_var($env_name, value.as_str());
         value
-    );
+    });
 
     // Env without default
     (
