@@ -76,6 +76,7 @@ impl FromEnvString for bool {
 
 
 #[cfg(feature = "array")]
+#[derive(Debug)]
 pub enum ArrayEnvError {
     InvalidType,
     FailedToParse,
@@ -115,6 +116,15 @@ impl FromEnvString for String {
 
     fn from_env_string(s: &EnvString) -> Result<Self, Self::Err> {
         Ok(s.0.clone())
+    }
+}
+
+
+impl FromEnvString for &'static str {
+    type Err = ();
+
+    fn from_env_string(s: &EnvString) -> Result<Self, Self::Err> {
+        Ok(Box::leak(s.0.clone().into_boxed_str()))
     }
 }
 

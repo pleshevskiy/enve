@@ -35,14 +35,16 @@
 //!     ),
 //!
 //!     APP {
+//!         static BASE_URL => "/api", // &'static str by default
+//!
 //!         ARTICLE {
-//!             PER_PAGE: u32 => 15,
+//!             static PER_PAGE: u32 => 15,
 //!         }
 //!
 //!         #[cfg(feature = "companies")]
 //!         COMPANY {
 //!             #[env_name = "INSTITUTIONS_PER_PAGE"]
-//!             PER_PAGE: u32 => 15,
+//!             static PER_PAGE: u32 => 15,
 //!         }
 //!     }
 //!
@@ -62,6 +64,7 @@
 //!     cfg::init();
 //!     assert_eq!(cfg::HOST(), String::from("127.0.0.1"));
 //!     assert_eq!(cfg::DATABASE_URL(), String::from("postgres://user:pass@localhost:5432/test"));
+//!     assert_eq!(cfg::APP::BASE_URL(), "/api");
 //!     assert_eq!(cfg::APP::ARTICLE::PER_PAGE(), 15);
 //!     assert_eq!(cfg::FEATURE::NEW_MENU(), true);
 //! }
@@ -84,15 +87,50 @@
 //! }
 //! ```
 //!
+//! ## Available features
+//!
+//! * **default** - ["macro", "primitives"]
+//! * **macro** - Activates `config!` macros for easy configure web application.
+//! * **static** - Add `static` option to `config!` macros (uses optional `lazy_static` package).
+//! * **array** - Add EnvString impl for vector type (uses optional `serde_json` package).
+//! * **primitives** - Group for features: `numbers` and `bool`.
+//! * **numbers** - Group for features: `int`, `uint` and `float`.
+//! * **int** - Group for features: `i8`, `i16`, `i32`, `i64`, `i128` and `isize`.
+//! * **uint** - Group for features: `u8`, `u16`, `u32`, `u64`, `u128` and `usize`.
+//! * **float** - Group for features: `f32` and `f64`
+//! * **i8** - impl EnvString for i8 type
+//! * **i16** - impl EnvString for i16 type
+//! * **i32** - impl EnvString for i32 type
+//! * **i64** - impl EnvString for i64 type
+//! * **i128** - impl EnvString for i128 type
+//! * **isize** - impl EnvString for isize type
+//! * **u8** - impl EnvString for u8 type
+//! * **u16** - impl EnvString for u16 type
+//! * **u32** - impl EnvString for u32 type
+//! * **u64** - impl EnvString for u64 type
+//! * **u128** - impl EnvString for u128 type
+//! * **usize** - impl EnvString for usize type
+//! * **f32** - impl EnvString for f32 type
+//! * **f64** - impl EnvString for f64 type
+//! * **bool** - impl EnvString for bool type
+//!a
 
 
 // Rustc lints.
-#![deny(unused_imports)]
+#![deny(
+    missing_debug_implementations,
+    unsafe_code,
+    unstable_features,
+    unused_imports,
+    unused_qualifications,
+)]
 
 /////////////////////////////////////////////////////////////////////////////
 
 #[macro_use]
 extern crate failure;
+#[cfg(feature = "static")]
+extern crate lazy_static;
 
 mod enverr;
 mod getenv;
@@ -108,7 +146,7 @@ pub mod prelude {
 
 
 #[cfg(feature = "macro")]
-#[allow(unused_imports)]
+//#[allow(unused_imports)]
 #[macro_use]
 mod r#macro;
 #[cfg(feature = "macro")]

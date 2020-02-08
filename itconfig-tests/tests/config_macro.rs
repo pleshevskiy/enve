@@ -422,3 +422,51 @@ fn concatenated_environment_variable_in_namespace() {
     );
     assert_eq!(env::var("CONCAT_ENVVAR"), Err(VarError::NotPresent));
 }
+
+
+#[test]
+#[cfg(feature = "static")]
+fn static_variables() {
+    config! {
+        static STATIC_STR => "test",
+        static STATIC_STRING: String => "test",
+        static STATIC_I8: i8 => 1,
+        static STATIC_I16: i16 => 1,
+        static STATIC_I32: i32 => 1,
+        static STATIC_I64: i64 => 1,
+        static STATIC_I128: i128 => 1,
+        static STATIC_ISIZE: isize => 1,
+        static STATIC_U8: u8 => 1,
+        static STATIC_U16: u16 => 1,
+        static STATIC_U32: u32 => 1,
+        static STATIC_U64: u64 => 1,
+        static STATIC_U128: u128 => 1,
+        static STATIC_USIZE: usize => 1,
+        static STATIC_F32: f32 => 1,
+        static STATIC_F64: f64 => 1,
+        static STATIC_CONCAT_VARIABLE < (
+            "static ",
+            STATIC_CONCAT_PART => "part",
+        ),
+    }
+
+    cfg::init();
+
+    assert_eq!(cfg::STATIC_STR(), "test");
+    assert_eq!(cfg::STATIC_STRING(), "test".to_string());
+    assert_eq!(cfg::STATIC_I8(), 1);
+    assert_eq!(cfg::STATIC_I16(), 1);
+    assert_eq!(cfg::STATIC_I32(), 1);
+    assert_eq!(cfg::STATIC_I64(), 1);
+    assert_eq!(cfg::STATIC_I128(), 1);
+    assert_eq!(cfg::STATIC_ISIZE(), 1);
+    assert_eq!(cfg::STATIC_U8(), 1);
+    assert_eq!(cfg::STATIC_U16(), 1);
+    assert_eq!(cfg::STATIC_U32(), 1);
+    assert_eq!(cfg::STATIC_U64(), 1);
+    assert_eq!(cfg::STATIC_U128(), 1);
+    assert_eq!(cfg::STATIC_USIZE(), 1);
+    assert_eq!(cfg::STATIC_F32(), 1.0);
+    assert_eq!(cfg::STATIC_F64(), 1.0);
+    assert_eq!(cfg::STATIC_CONCAT_VARIABLE(), "static part".to_string())
+}

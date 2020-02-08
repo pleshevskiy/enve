@@ -12,7 +12,7 @@ before_cache:
 script:
   - |
     rustc --version &&
-    cargo test
+    cargo test --all-features
 matrix:
   allow_failures:
     - rust: nightly
