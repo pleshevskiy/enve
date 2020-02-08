@@ -203,6 +203,49 @@
 /// cfg::init();
 /// ```
 ///
+/// Static
+/// ------
+///
+/// `with feauter = "static"`
+///
+/// Starting with 0.11 version you can use lazy static for improve speed of variable. This is very
+/// useful, if you use variable more than once.
+///
+/// ```rust
+/// # #[macro_use] extern crate itconfig;
+/// # use std::env;
+/// env::set_var("APP_BASE_URL", "/api/v1");
+///
+/// config! {
+///     static APP_BASE_URL => "/api",
+/// }
+///
+/// cfg::init();
+/// assert_eq!(cfg::APP_BASE_URL(), "/api/v1");
+/// ```
+///
+/// You also can use static with concat variables
+///
+/// ```rust
+/// # #[macro_use] extern crate itconfig;
+/// config! {
+///     static CONNECTION_STRING < (
+///         "postgres://",
+///         NOT_DEFINED_PG_USERNAME => "user",
+///         ":",
+///         NOT_DEFINED_PG_PASSWORD => "pass",
+///         "@",
+///         NOT_DEFINED_PG_HOST => "localhost:5432",
+///         "/",
+///         NOT_DEFINED_PG_DB => "test",
+///     ),
+/// }
+///
+/// cfg::init();
+/// assert_eq!(cfg::CONNECTION_STRING(), "postgres://user:pass@localhost:5432/test".to_string());
+/// ```
+///
+///
 /// ---
 ///
 /// This module will also contain helper method:
@@ -255,6 +298,14 @@ macro_rules! __itconfig_invalid_syntax {
     () => {
         compile_error!(
             "Invalid `config!` syntax. Please see the `config!` macro docs for more info.\
+            `https://docs.rs/itconfig/latest/itconfig/macro.config.html`"
+        );
+    };
+
+    (feature "static") => {
+        compile_error!(
+            "Feature `static` is required for enable this macro function.\
+            Please see the `config!` macro docs for more info.\
             `https://docs.rs/itconfig/latest/itconfig/macro.config.html`"
         );
     };
@@ -346,6 +397,7 @@ macro_rules! __itconfig_parse_variables {
         ],
         $($args:tt)*
     ) => {
+        #[cfg(feature = "static")]
         __itconfig_parse_variables! {
             current_variable = {
                 unparsed_meta = [$(#$meta)*],
@@ -359,6 +411,9 @@ macro_rules! __itconfig_parse_variables {
             tokens = [$($rest)*],
             $($args)*
         }
+
+        #[cfg(not(feature = "static"))]
+        __itconfig_invalid_syntax!(feature "static");
     };
 
     // Find concatenated variable
@@ -394,6 +449,7 @@ macro_rules! __itconfig_parse_variables {
         ],
         $($args:tt)*
     ) => {
+        #[cfg(feature = "static")]
         __itconfig_parse_variables! {
             current_variable = {
                 unparsed_meta = [$(#$meta)*],
@@ -408,6 +464,9 @@ macro_rules! __itconfig_parse_variables {
             tokens = [$($rest)*],
             $($args)*
         }
+
+        #[cfg(not(feature = "static"))]
+        __itconfig_invalid_syntax!(feature "static");
     };
 
     // Find variable

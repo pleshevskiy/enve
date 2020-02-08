@@ -20,7 +20,7 @@ lazy_static = { version = "1.4.0", optional = true }
 serde_json = { version = "1.0.44", optional = true }
 
 [features]
-default = ["macro", "primitives", "static"]
+default = ["macro", "primitives"]
 
 macro = []
 static = ["lazy_static"]

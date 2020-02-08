@@ -76,6 +76,7 @@ impl FromEnvString for bool {
 
 
 #[cfg(feature = "array")]
+#[derive(Debug)]
 pub enum ArrayEnvError {
     InvalidType,
     FailedToParse,
