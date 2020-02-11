@@ -100,7 +100,7 @@ fn main() {
 
 ## Available features
 
-* **default** - ["macro", "primitives"]
+* **default** - ["macro", "primitives", "static"]
 * **macro** - Activates `config!` macros for easy configure web application.
 * **static** - Add `static` option to `config!` macros (uses optional `lazy_static` package).
 * **array** - Add EnvString impl for vector type (uses optional `serde_json` package).

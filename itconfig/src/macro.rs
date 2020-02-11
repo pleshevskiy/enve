@@ -665,7 +665,7 @@ macro_rules! __itconfig_impl_namespace {
         pub mod $mod_name {
             #![allow(non_snake_case)]
             #[cfg(feature = "static")]
-            use lazy_static::lazy_static;
+            use $crate::lazy_static::lazy_static;
 
             $(__itconfig_impl_namespace! {
                 variables = $ns_variable,
