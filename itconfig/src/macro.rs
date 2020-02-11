@@ -301,14 +301,6 @@ macro_rules! __itconfig_invalid_syntax {
             `https://docs.rs/itconfig/latest/itconfig/macro.config.html`"
         );
     };
-
-    (feature "static") => {
-        compile_error!(
-            "Feature `static` is required for enable this macro function.\
-            Please see the `config!` macro docs for more info.\
-            `https://docs.rs/itconfig/latest/itconfig/macro.config.html`"
-        );
-    };
 }
 
 #[macro_export]
@@ -348,6 +340,55 @@ macro_rules! __itconfig_parse_module {
     // Invalid syntax
     ($($tokens:tt)*) => {
         __itconfig_invalid_syntax!();
+    };
+}
+
+
+#[cfg(feature = "static")]
+#[macro_export]
+#[doc(hidden)]
+macro_rules! __itconfig_impl_static_feature {
+    (
+        unparsed_meta = $meta:tt,
+        unparsed_concat = $concat:tt,
+        name = $name:ident,
+        ty = $ty:ty,
+        $(default = $default:expr,)?
+        tokens = $tokens:tt,
+        args = [$($args:tt)*],
+    ) => {
+        __itconfig_parse_variables! {
+            current_variable = {
+                unparsed_meta = $meta,
+                meta = [],
+                unparsed_concat = $concat,
+                concat = [],
+                name = $name,
+                ty = $ty,
+                is_static = true,
+                $(default = $default,)?
+            },
+            tokens = $tokens,
+            $($args)*
+        }
+    };
+
+    (@import_modules) => {
+        use $crate::lazy_static::lazy_static;
+    };
+}
+
+
+#[cfg(not(feature = "static"))]
+#[macro_export]
+#[doc(hidden)]
+macro_rules! __itconfig_impl_static_feature {
+    ($($tt:tt)*) => {
+        compile_error!(
+            "Feature `static` is required for enable this macro function.\
+            Please see the `config!` macro docs for more info.\
+            `https://docs.rs/itconfig/latest/itconfig/macro.config.html`"
+        );
     };
 }
 
@@ -397,23 +438,14 @@ macro_rules! __itconfig_parse_variables {
         ],
         $($args:tt)*
     ) => {
-        #[cfg(feature = "static")]
-        __itconfig_parse_variables! {
-            current_variable = {
-                unparsed_meta = [$(#$meta)*],
-                meta = [],
-                unparsed_concat = [$($inner)+],
-                concat = [],
-                name = $name,
-                ty = String,
-                is_static = true,
-            },
+        __itconfig_impl_static_feature! {
+            unparsed_meta = [$(#$meta)*],
+            unparsed_concat = [$($inner)+],
+            name = $name,
+            ty = String,
             tokens = [$($rest)*],
-            $($args)*
+            args = [$($args)*],
         }
-
-        #[cfg(not(feature = "static"))]
-        __itconfig_invalid_syntax!(feature "static");
     };
 
     // Find concatenated variable
@@ -449,24 +481,15 @@ macro_rules! __itconfig_parse_variables {
         ],
         $($args:tt)*
     ) => {
-        #[cfg(feature = "static")]
-        __itconfig_parse_variables! {
-            current_variable = {
-                unparsed_meta = [$(#$meta)*],
-                meta = [],
-                unparsed_concat = [],
-                concat = [],
-                name = $name,
-                ty = __itconfig_get_ty_or_default!($($ty)?),
-                is_static = true,
-                $(default = $default,)?
-            },
+        __itconfig_impl_static_feature! {
+            unparsed_meta = [$(#$meta)*],
+            unparsed_concat = [],
+            name = $name,
+            ty = __itconfig_get_ty_or_default!($($ty)?),
+            $(default = $default,)?
             tokens = [$($rest)*],
-            $($args)*
+            args = [$($args)*],
         }
-
-        #[cfg(not(feature = "static"))]
-        __itconfig_invalid_syntax!(feature "static");
     };
 
     // Find variable
@@ -664,8 +687,8 @@ macro_rules! __itconfig_impl_namespace {
         $(#$meta)*
         pub mod $mod_name {
             #![allow(non_snake_case)]
-            #[cfg(feature = "static")]
-            use $crate::lazy_static::lazy_static;
+
+            __itconfig_impl_static_feature!( @import_modules );
 
             $(__itconfig_impl_namespace! {
                 variables = $ns_variable,
