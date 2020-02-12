@@ -348,6 +348,10 @@ macro_rules! __itconfig_parse_module {
 #[macro_export]
 #[doc(hidden)]
 macro_rules! __itconfig_impl_static_feature {
+    (@import_modules) => {
+        use $crate::lazy_static::lazy_static;
+    };
+
     (
         unparsed_meta = $meta:tt,
         unparsed_concat = $concat:tt,
@@ -372,10 +376,6 @@ macro_rules! __itconfig_impl_static_feature {
             $($args)*
         }
     };
-
-    (@import_modules) => {
-        use $crate::lazy_static::lazy_static;
-    };
 }
 
 
@@ -383,6 +383,8 @@ macro_rules! __itconfig_impl_static_feature {
 #[macro_export]
 #[doc(hidden)]
 macro_rules! __itconfig_impl_static_feature {
+    (@import_modules) => { };
+
     ($($tt:tt)*) => {
         compile_error!(
             "Feature `static` is required for enable this macro function.\
