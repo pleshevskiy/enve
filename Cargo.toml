@@ -1,6 +1,7 @@
 [workspace]
 members = [
     "itconfig",
+    "itconfig-macro",
     "itconfig-tests",
     "examples/diesel",
     "examples/rocket", # nightly
@@ -9,5 +10,6 @@ members = [
 
 default-members = [
     "itconfig",
+    "itconfig-macro",
     "itconfig-tests",
 ]

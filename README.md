@@ -18,10 +18,29 @@ where you need variable. It uses little bit memory, but configuration lifetime i
 as application lifetime. Because of it I decided to create my own library.
 
 
+## Installation
+
+These macros require a Rust compiler version 1.31 or newer.
+
+Add `itconfig = { version = "1.0", features = ["macro"] }` as a dependency in `Cargo.toml`.
+
+`Cargo.toml` example:
+
+```toml
+[package]
+name = "my-crate"
+version = "0.1.0"
+authors = ["Me <user@rust-lang.org>"]
+
+[dependencies]
+itconfig = { version = "1.0", features = ["macro"] }
+```
+
+
 ## Example usage
 
 ```rust
-#[macro_use] extern crate itconfig;
+use itconfig::config;
 use std::env;
 //use dotenv::dotenv;
 
@@ -69,11 +88,11 @@ fn main () {
     // dotenv().ok();
     env::set_var("FEATURE_NEW_MENU", "t");
     
-    cfg::init();
-    assert_eq!(cfg::HOST(), String::from("127.0.0.1"));
-    assert_eq!(cfg::DATABASE_URL(), String::from("postgres://user:pass@localhost:5432/test"));
-    assert_eq!(cfg::APP:ARTICLE:PER_PAGE(), 15);
-    assert_eq!(cfg::FEATURE::NEW_MENU(), true);
+    config::init();
+    assert_eq!(config::HOST(), String::from("127.0.0.1"));
+    assert_eq!(config::DATABASE_URL(), String::from("postgres://user:pass@localhost:5432/test"));
+    assert_eq!(config::APP:ARTICLE:PER_PAGE(), 15);
+    assert_eq!(config::FEATURE::NEW_MENU(), true);
 }
 ```
 
@@ -112,6 +131,7 @@ cargo test
 * [x] Add nested namespaces
 * [x] Support meta for namespaces
 * [x] Support array type
+* [x] Rewrite to proc macro
 * [ ] Support hashmap type
 * [ ] Support custom env type
 * [ ] Common configuration for namespace variables
@@ -121,7 +141,6 @@ cargo test
 
 * **default** - ["macro", "primitives", "static"]
 * **macro** - Activates `config!` macros for easy configure web application.
-* **static** - Add `static` option to `config!` macros (uses optional `lazy_static` package).
 * **array** - Add EnvString impl for vector type (uses optional `serde_json` package).
 * **primitives** - Group for features: `numbers` and `bool`.
 * **numbers** - Group for features: `int`, `uint` and `float`.

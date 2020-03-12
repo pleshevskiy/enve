@@ -1,118 +1,114 @@
-use std::env;
-use std::env::VarError;
-
-#[macro_use]
-extern crate itconfig;
-
-
-#[test]
-#[should_panic(expected = "Environment variable \"MISS_VARIABLE\" is missing")]
-fn should_panic_if_miss_env_variable() {
-    config! {
+mod test_case_1 {
+    itconfig::config! {
         MISS_VARIABLE: bool,
     }
 
-    cfg::init();
+    #[test]
+    #[should_panic(expected = "Environment variable \"MISS_VARIABLE\" is missing")]
+    fn should_panic_if_miss_env_variable() {
+        config::init();
+    }
 }
 
 
-#[test]
-fn one_variable() {
-    env::set_var("DEBUG", "t");
+mod test_case_2 {
+    use std::env;
 
-    config! {
+    itconfig::config! {
         DEBUG: bool,
     }
 
-    cfg::init();
-    assert_eq!(cfg::DEBUG(), true);
-    env::remove_var("DEBUG");
+    #[test]
+    fn one_variable() {
+        env::set_var("DEBUG", "t");
+
+        config::init();
+        assert_eq!(config::DEBUG(), true);
+        env::remove_var("DEBUG");
+    }
 }
 
-#[test]
-fn one_variable_with_default_value() {
-    config! {
+
+mod test_case_3 {
+    itconfig::config! {
         DEBUG: bool => true,
     }
 
-    cfg::init();
-    assert_eq!(cfg::DEBUG(), true);
+    #[test]
+    fn one_variable_with_default_value() {
+        config::init();
+        assert_eq!(config::DEBUG(), true);
+    }
 }
 
-#[test]
-fn few_variables_with_default_value() {
-    config! {
+mod test_case_4 {
+    itconfig::config! {
         FOO: bool => true,
         BAR: bool => false,
     }
 
-    cfg::init();
-    assert_eq!(cfg::FOO(), true);
-    assert_eq!(cfg::BAR(), false);
+    #[test]
+    fn few_variables_with_default_value() {
+        config::init();
+        assert_eq!(config::FOO(), true);
+        assert_eq!(config::BAR(), false);
+    }
 }
 
-#[test]
-fn different_types_with_default_value() {
-    config! {
+mod test_case_5 {
+    itconfig::config! {
         NUMBER: i32 => 30,
         BOOL: bool => true,
         STR: String => "str",
         STRING: String => "string".to_string(),
     }
 
-    cfg::init();
-    assert_eq!(cfg::NUMBER(), 30);
-    assert_eq!(cfg::BOOL(), true);
-    assert_eq!(cfg::STR(), "str".to_string());
-    assert_eq!(cfg::STRING(), "string".to_string());
+    #[test]
+    fn different_types_with_default_value() {
+        config::init();
+        assert_eq!(config::NUMBER(), 30);
+        assert_eq!(config::BOOL(), true);
+        assert_eq!(config::STR(), "str".to_string());
+        assert_eq!(config::STRING(), "string".to_string());
+    }
 }
 
-#[test]
-fn convert_bool_type_value_from_env() {
-    env::set_var("T_BOOL", "t");
-    env::set_var("TRUE_BOOL", "true");
-    env::set_var("NUM_BOOL", "1");
-    env::set_var("ON_BOOL", "on");
-    env::set_var("CAMEL_CASE", "True");
-    env::set_var("FALSE_BOOL", "false");
+mod test_case_6 {
+    use std::env;
 
-    config! {
+    itconfig::config! {
         T_BOOL: bool,
         TRUE_BOOL: bool,
         NUM_BOOL: bool,
         ON_BOOL: bool,
         CAMEL_CASE: bool,
         FALSE_BOOL: bool,
-
     }
 
-    cfg::init();
-    assert_eq!(cfg::T_BOOL(), true);
-    assert_eq!(cfg::TRUE_BOOL(), true);
-    assert_eq!(cfg::NUM_BOOL(), true);
-    assert_eq!(cfg::ON_BOOL(), true);
-    assert_eq!(cfg::CAMEL_CASE(), true);
-    assert_eq!(cfg::FALSE_BOOL(), false);
+    #[test]
+    fn convert_bool_type_value_from_env() {
+        env::set_var("T_BOOL", "t");
+        env::set_var("TRUE_BOOL", "true");
+        env::set_var("NUM_BOOL", "1");
+        env::set_var("ON_BOOL", "on");
+        env::set_var("CAMEL_CASE", "True");
+        env::set_var("FALSE_BOOL", "false");
+
+        config::init();
+        assert_eq!(config::T_BOOL(), true);
+        assert_eq!(config::TRUE_BOOL(), true);
+        assert_eq!(config::NUM_BOOL(), true);
+        assert_eq!(config::ON_BOOL(), true);
+        assert_eq!(config::CAMEL_CASE(), true);
+        assert_eq!(config::FALSE_BOOL(), false);
+    }
 }
 
-#[test]
-fn convert_number_type_value_from_env() {
-    env::set_var("I8", "10");
-    env::set_var("I16", "10");
-    env::set_var("I32", "10");
-    env::set_var("I64", "10");
-    env::set_var("I128", "10");
-    env::set_var("ISIZE","10");
-    env::set_var("U8", "10");
-    env::set_var("U16", "10");
-    env::set_var("U32", "10");
-    env::set_var("U64", "10");
-    env::set_var("U128", "10");
-    env::set_var("USIZE","10");
-    env::set_var("F32", "10");
-    env::set_var("F64","10");
 
-    config! {
+mod test_case_7 {
+    use std::env;
+
+    itconfig::config! {
         I8: i8,
         I16: i16,
         I32: i32,
@@ -129,40 +125,59 @@ fn convert_number_type_value_from_env() {
         F64: f64,
     }
 
-    cfg::init();
-    assert_eq!(cfg::I8(), 10);
-    assert_eq!(cfg::I16(), 10);
-    assert_eq!(cfg::I32(), 10);
-    assert_eq!(cfg::I64(), 10);
-    assert_eq!(cfg::ISIZE(), 10);
-    assert_eq!(cfg::U8(), 10);
-    assert_eq!(cfg::U16(), 10);
-    assert_eq!(cfg::U32(), 10);
-    assert_eq!(cfg::U64(), 10);
-    assert_eq!(cfg::USIZE(), 10);
-    assert_eq!(cfg::F32(), 10.0);
-    assert_eq!(cfg::F64(), 10.0);
+    #[test]
+    fn convert_number_type_value_from_env() {
+        env::set_var("I8", "10");
+        env::set_var("I16", "10");
+        env::set_var("I32", "10");
+        env::set_var("I64", "10");
+        env::set_var("I128", "10");
+        env::set_var("ISIZE", "10");
+        env::set_var("U8", "10");
+        env::set_var("U16", "10");
+        env::set_var("U32", "10");
+        env::set_var("U64", "10");
+        env::set_var("U128", "10");
+        env::set_var("USIZE", "10");
+        env::set_var("F32", "10");
+        env::set_var("F64", "10");
+
+        config::init();
+        assert_eq!(config::I8(), 10);
+        assert_eq!(config::I16(), 10);
+        assert_eq!(config::I32(), 10);
+        assert_eq!(config::I64(), 10);
+        assert_eq!(config::ISIZE(), 10);
+        assert_eq!(config::U8(), 10);
+        assert_eq!(config::U16(), 10);
+        assert_eq!(config::U32(), 10);
+        assert_eq!(config::U64(), 10);
+        assert_eq!(config::USIZE(), 10);
+        assert_eq!(config::F32(), 10.0);
+        assert_eq!(config::F64(), 10.0);
+    }
 }
 
 
-#[test]
-fn change_configuration_module_name() {
-    config! {
-        #![mod_name = custom_config_name]
+mod test_case_8 {
+    itconfig::config! {
+        #![config(name = "custom_config_name")]
 
         DEBUG: bool => true,
     }
 
-    custom_config_name::init();
-    assert_eq!(custom_config_name::DEBUG(), true);
+    #[test]
+    fn change_configuration_module_name() {
+        custom_config_name::init();
+        assert_eq!(custom_config_name::DEBUG(), true);
+    }
 }
 
 
-#[test]
-fn configuration_with_namespace() {
-    env::set_var("DB_HOST", "t");
+mod test_case_9 {
+    use std::env;
 
-    config! {
+    itconfig::config! {
         DEBUG: bool => true,
 
         DB {
@@ -174,14 +189,18 @@ fn configuration_with_namespace() {
         APP {}
     }
 
-    cfg::init();
-    assert_eq!(cfg::DEBUG(), true);
-    assert_eq!(cfg::DB::HOST(), true);
+    #[test]
+    fn configuration_with_namespace() {
+        env::set_var("DB_HOST", "t");
+
+        config::init();
+        assert_eq!(config::DEBUG(), true);
+        assert_eq!(config::DB::HOST(), true);
+    }
 }
 
-#[test]
-fn configuration_with_nested_namespaces() {
-    config! {
+mod test_case_10 {
+    itconfig::config! {
         FIRST {
             SECOND {
                 THIRD {
@@ -191,14 +210,16 @@ fn configuration_with_nested_namespaces() {
         }
     }
 
-    cfg::init();
-    assert_eq!(cfg::FIRST::SECOND::THIRD::FOO(), 50);
+    #[test]
+    fn configuration_with_nested_namespaces() {
+        config::init();
+        assert_eq!(config::FIRST::SECOND::THIRD::FOO(), 50);
+    }
 }
 
-#[cfg(feature = "meta_namespace")]
-#[test]
-fn configuration_namespaces_with_custom_meta() {
-    config! {
+
+mod test_case_11 {
+    itconfig::config! {
         FIRST {
             #[cfg(feature = "meta_namespace")]
             SECOND {
@@ -209,16 +230,19 @@ fn configuration_namespaces_with_custom_meta() {
         }
     }
 
-    cfg::init();
-    assert_eq!(cfg::FIRST::SECOND::THIRD::FOO(), 50);
+    #[cfg(feature = "meta_namespace")]
+    #[test]
+    fn configuration_namespaces_with_custom_meta() {
+        config::init();
+        assert_eq!(config::FIRST::SECOND::THIRD::FOO(), 50);
+    }
 }
 
-#[test]
-fn configuration_variables_and_namespace_in_lowercase() {
-    env::set_var("TESTING", "t");
-    env::set_var("NAMESPACE_FOO", "t");
 
-    config! {
+mod test_case_12 {
+    use std::env;
+
+    itconfig::config! {
         testing: bool,
 
         namespace {
@@ -226,17 +250,22 @@ fn configuration_variables_and_namespace_in_lowercase() {
         }
     }
 
-    cfg::init();
-    assert_eq!(cfg::testing(), true);
-    assert_eq!(cfg::namespace::foo(), true);
+    #[test]
+    fn configuration_variables_and_namespace_in_lowercase() {
+        env::set_var("TESTING", "t");
+        env::set_var("NAMESPACE_FOO", "t");
+
+        config::init();
+        assert_eq!(config::testing(), true);
+        assert_eq!(config::namespace::foo(), true);
+    }
 }
 
 
-#[test]
-fn custom_environment_name_for_variable() {
-    env::set_var("MY_CUSTOM_NAME", "95");
+mod test_case_13 {
+    use std::env;
 
-    config! {
+    itconfig::config! {
         #[env_name = "MY_CUSTOM_NAME"]
         PER_PAGE: i32,
 
@@ -246,16 +275,21 @@ fn custom_environment_name_for_variable() {
         }
     }
 
-    cfg::init();
-    assert_eq!(cfg::PER_PAGE(), 95);
-    assert_eq!(cfg::APP::RECIPES_PER_PAGE(), 95);
+    #[test]
+    fn custom_environment_name_for_variable() {
+        env::set_var("MY_CUSTOM_NAME", "95");
+
+        config::init();
+        assert_eq!(config::PER_PAGE(), 95);
+        assert_eq!(config::APP::RECIPES_PER_PAGE(), 95);
+    }
 }
 
-#[test]
-fn stranger_meta_data() {
-    env::set_var("MY_CUSTOM_NAME", "95");
 
-    config! {
+mod test_case_14 {
+    use std::env;
+
+    itconfig::config! {
         #[cfg(feature = "postgres")]
         #[env_name = "MY_CUSTOM_NAME"]
         DATABASE_URL: String,
@@ -265,40 +299,47 @@ fn stranger_meta_data() {
         DATABASE_URL: i32,
     }
 
-    cfg::init();
-    #[cfg(not(feature = "postgres"))]
-    assert_eq!(cfg::DATABASE_URL(), 95);
+    #[test]
+    fn stranger_meta_data() {
+        env::set_var("MY_CUSTOM_NAME", "95");
 
-    #[cfg(feature = "postgres")]
-    assert_eq!(cfg::DATABASE_URL(), "95");
+        config::init();
+        #[cfg(not(feature = "postgres"))]
+        assert_eq!(config::DATABASE_URL(), 95);
+
+        #[cfg(feature = "postgres")]
+        assert_eq!(config::DATABASE_URL(), "95");
+    }
 }
 
-#[test]
-fn setting_default_env_variable() {
-    config! {
+
+mod test_case_15 {
+    use std::env;
+
+    itconfig::config! {
         DEFAULT_ENV_STRING: String => "localhost",
         DEFAULT_ENV_BOOLEAN: bool => true,
         DEFAULT_ENV_UINT: u32 => 40,
         DEFAULT_ENV_FLOAT: f64 => 40.9,
     }
 
-    cfg::init();
 
-    assert_eq!(env::var("DEFAULT_ENV_STRING"), Ok("localhost".to_string()));
-    assert_eq!(env::var("DEFAULT_ENV_BOOLEAN"), Ok("true".to_string()));
-    assert_eq!(env::var("DEFAULT_ENV_UINT"), Ok("40".to_string()));
-    assert_eq!(env::var("DEFAULT_ENV_FLOAT"), Ok("40.9".to_string()));
+    #[test]
+    fn setting_default_env_variable() {
+        config::init();
+
+        assert_eq!(env::var("DEFAULT_ENV_STRING"), Ok("localhost".to_string()));
+        assert_eq!(env::var("DEFAULT_ENV_BOOLEAN"), Ok("true".to_string()));
+        assert_eq!(env::var("DEFAULT_ENV_UINT"), Ok("40".to_string()));
+        assert_eq!(env::var("DEFAULT_ENV_FLOAT"), Ok("40.9".to_string()));
+    }
 }
 
 
-#[test]
-fn concatenate_environment_variables() {
-    env::set_var("POSTGRES_USERNAME", "user");
-    env::set_var("POSTGRES_PASSWORD", "pass");
-    env::set_var("POSTGRES_HOST", "localhost");
-    env::set_var("POSTGRES_DB", "test");
+mod test_case_16 {
+    use std::env;
 
-    config! {
+    itconfig::config! {
         DATABASE_URL < (
             "postgres://",
             POSTGRES_USERNAME,
@@ -311,16 +352,23 @@ fn concatenate_environment_variables() {
         ),
     }
 
-    cfg::init();
-    assert_eq!(cfg::DATABASE_URL(), String::from("postgres://user:pass@localhost/test"));
+    #[test]
+    fn concatenate_environment_variables() {
+        env::set_var("POSTGRES_USERNAME", "user");
+        env::set_var("POSTGRES_PASSWORD", "pass");
+        env::set_var("POSTGRES_HOST", "localhost");
+        env::set_var("POSTGRES_DB", "test");
+
+        config::init();
+        assert_eq!(config::DATABASE_URL(), String::from("postgres://user:pass@localhost/test"));
+    }
 }
 
 
-#[test]
-fn setting_default_concat_env_variable() {
-    env::set_var("SETTING_DEFAULT_CONCAT_ENV_VARIABLE", "custom");
+mod test_case_17 {
+    use std::env;
 
-    config! {
+    itconfig::config! {
         DEFAULT_CONCAT_ENV < (
             "string",
             "/",
@@ -328,15 +376,19 @@ fn setting_default_concat_env_variable() {
         ),
     }
 
-    cfg::init();
-    assert_eq!(env::var("DEFAULT_CONCAT_ENV"), Ok("string/custom".to_string()));
+
+    #[test]
+    fn setting_default_concat_env_variable() {
+        env::set_var("SETTING_DEFAULT_CONCAT_ENV_VARIABLE", "custom");
+
+        config::init();
+        assert_eq!(env::var("DEFAULT_CONCAT_ENV"), Ok("string/custom".to_string()));
+    }
 }
 
 
-#[test]
-#[should_panic(expected = "Environment variable \"PG_USERNAME\" is missing")]
-fn concatenate_not_defined_environment_variables() {
-    config! {
+mod test_case_18 {
+    itconfig::config! {
         DATABASE_URL < (
             "postgres://",
             PG_USERNAME,
@@ -348,13 +400,19 @@ fn concatenate_not_defined_environment_variables() {
             PG_DB,
         ),
     }
-    cfg::init();
+
+    #[test]
+    #[should_panic(expected = "Environment variable \"PG_USERNAME\" is missing")]
+    fn concatenate_not_defined_environment_variables() {
+        config::init();
+    }
 }
 
 
-#[test]
-fn default_value_for_concatenate_env_parameter() {
-    config! {
+mod test_case_19 {
+    use std::env;
+
+    itconfig::config! {
         CONCATENATED_DATABASE_URL < (
             "postgres://",
             NOT_DEFINED_PG_USERNAME => "user",
@@ -367,16 +425,23 @@ fn default_value_for_concatenate_env_parameter() {
         ),
     }
 
-    cfg::init();
-    assert_eq!(
-        env::var("CONCATENATED_DATABASE_URL"),
-        Ok("postgres://user:pass@localhost:5432/test".to_string())
-    );
+
+    #[test]
+    fn default_value_for_concatenate_env_parameter() {
+        config::init();
+        assert_eq!(
+            env::var("CONCATENATED_DATABASE_URL"),
+            Ok("postgres://user:pass@localhost:5432/test".to_string())
+        );
+    }
 }
 
-#[test]
-fn envname_meta_for_concatenated_env_variable() {
-    config! {
+
+mod test_case_20 {
+    use std::env;
+    use std::env::VarError;
+
+    itconfig::config! {
         #[env_name = "CUSTOM_CONCAT_ENVNAME"]
         CONCAT_ENVVAR < (
             "postgres://",
@@ -390,17 +455,23 @@ fn envname_meta_for_concatenated_env_variable() {
         ),
     }
 
-    cfg::init();
-    assert_eq!(
-        env::var("CUSTOM_CONCAT_ENVNAME"),
-        Ok("postgres://user:pass@localhost:5432/test".to_string())
-    );
-    assert_eq!(env::var("CONCAT_ENVVAR"), Err(VarError::NotPresent));
+    #[test]
+    fn envname_meta_for_concatenated_env_variable() {
+        config::init();
+        assert_eq!(
+            env::var("CUSTOM_CONCAT_ENVNAME"),
+            Ok("postgres://user:pass@localhost:5432/test".to_string())
+        );
+        assert_eq!(env::var("CONCAT_ENVVAR"), Err(VarError::NotPresent));
+    }
 }
 
-#[test]
-fn concatenated_environment_variable_in_namespace() {
-    config! {
+
+mod test_case_21 {
+    use std::env;
+    use std::env::VarError;
+
+    itconfig::config! {
         CONCATED_NAMESPACE {
             CONCAT_ENVVAR < (
                 "postgres://",
@@ -415,19 +486,21 @@ fn concatenated_environment_variable_in_namespace() {
         }
     }
 
-    cfg::init();
-    assert_eq!(
-        env::var("CONCATED_NAMESPACE_CONCAT_ENVVAR"),
-        Ok("postgres://user:pass@localhost:5432/test".to_string())
-    );
-    assert_eq!(env::var("CONCAT_ENVVAR"), Err(VarError::NotPresent));
+
+    #[test]
+    fn concatenated_environment_variable_in_namespace() {
+        config::init();
+        assert_eq!(
+            env::var("CONCATED_NAMESPACE_CONCAT_ENVVAR"),
+            Ok("postgres://user:pass@localhost:5432/test".to_string())
+        );
+        assert_eq!(env::var("CONCAT_ENVVAR"), Err(VarError::NotPresent));
+    }
 }
 
 
-#[test]
-#[cfg(feature = "static")]
-fn static_variables() {
-    config! {
+mod test_case_22 {
+    itconfig::config! {
         static STATIC_STR => "test",
         static STATIC_STRING: String => "test",
         static STATIC_I8: i8 => 1,
@@ -450,23 +523,27 @@ fn static_variables() {
         ),
     }
 
-    cfg::init();
 
-    assert_eq!(cfg::STATIC_STR(), "test");
-    assert_eq!(cfg::STATIC_STRING(), "test".to_string());
-    assert_eq!(cfg::STATIC_I8(), 1);
-    assert_eq!(cfg::STATIC_I16(), 1);
-    assert_eq!(cfg::STATIC_I32(), 1);
-    assert_eq!(cfg::STATIC_I64(), 1);
-    assert_eq!(cfg::STATIC_I128(), 1);
-    assert_eq!(cfg::STATIC_ISIZE(), 1);
-    assert_eq!(cfg::STATIC_U8(), 1);
-    assert_eq!(cfg::STATIC_U16(), 1);
-    assert_eq!(cfg::STATIC_U32(), 1);
-    assert_eq!(cfg::STATIC_U64(), 1);
-    assert_eq!(cfg::STATIC_U128(), 1);
-    assert_eq!(cfg::STATIC_USIZE(), 1);
-    assert_eq!(cfg::STATIC_F32(), 1.0);
-    assert_eq!(cfg::STATIC_F64(), 1.0);
-    assert_eq!(cfg::STATIC_CONCAT_VARIABLE(), "static part".to_string())
+    #[test]
+    fn static_variables() {
+        config::init();
+
+        assert_eq!(config::STATIC_STR(), "test");
+        assert_eq!(config::STATIC_STRING(), "test".to_string());
+        assert_eq!(config::STATIC_I8(), 1);
+        assert_eq!(config::STATIC_I16(), 1);
+        assert_eq!(config::STATIC_I32(), 1);
+        assert_eq!(config::STATIC_I64(), 1);
+        assert_eq!(config::STATIC_I128(), 1);
+        assert_eq!(config::STATIC_ISIZE(), 1);
+        assert_eq!(config::STATIC_U8(), 1);
+        assert_eq!(config::STATIC_U16(), 1);
+        assert_eq!(config::STATIC_U32(), 1);
+        assert_eq!(config::STATIC_U64(), 1);
+        assert_eq!(config::STATIC_U128(), 1);
+        assert_eq!(config::STATIC_USIZE(), 1);
+        assert_eq!(config::STATIC_F32(), 1.0);
+        assert_eq!(config::STATIC_F64(), 1.0);
+        assert_eq!(config::STATIC_CONCAT_VARIABLE(), "static part".to_string())
+    }
 }

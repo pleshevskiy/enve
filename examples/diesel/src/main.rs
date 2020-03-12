@@ -1,12 +1,11 @@
 #[macro_use]
-extern crate itconfig;
-#[macro_use]
 extern crate diesel;
 
 mod db;
 mod models;
 mod schema;
 
+use itconfig::config;
 use dotenv::dotenv;
 use diesel::prelude::*;
 use crate::models::*;
@@ -19,7 +18,7 @@ config! {
 
 fn main() {
     dotenv().ok();
-    cfg::init();
+    config::init();
 
     let connection = db::establish_connection();
     let posts = get_posts(&connection);
