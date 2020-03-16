@@ -17,7 +17,7 @@ readme = "README.md"
 [dependencies]
 failure = { version = "0.1.7", features = ["derive"]}
 serde_json = { version = "1.0.44", optional = true }
-itconfig-macro = { path = "../itconfig-macro", optional = true }
+itconfig-macro = { version = "1.0", path = "../itconfig-macro", optional = true }
 
 [dev-dependencies]
 lazy_static = "1.4.0"
