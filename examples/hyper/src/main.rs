@@ -1,6 +1,4 @@
-#[macro_use]
-extern crate itconfig;
-
+use itconfig::config;
 use bytes::buf::BufExt;
 use futures_util::{stream, StreamExt};
 use hyper::client::HttpConnector;
@@ -41,7 +39,7 @@ const POST_DATA: &'static str = r#"{"original": "data"}"#;
 async fn client_request_response(client: &Client<HttpConnector>) -> HyperResult<Response<Body>> {
     let req = Request::builder()
         .method(Method::POST)
-        .uri(cfg::HYPER::JSON_API_URL())
+        .uri(config::HYPER::JSON_API_URL())
         .header(header::CONTENT_TYPE, "application/json")
         .body(Body::from(POST_DATA))
         .unwrap();
@@ -113,10 +111,10 @@ async fn response_examples(
 
 #[tokio::main]
 async fn main() -> HyperResult<()> {
-    cfg::init();
+    config::init();
     pretty_env_logger::init();
 
-    let addr = cfg::HYPER::HOST().parse().unwrap();
+    let addr = config::HYPER::HOST().parse().unwrap();
 
     // Share a `Client` with all `Service`s
     let client = Client::new();

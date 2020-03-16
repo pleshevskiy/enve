@@ -2,9 +2,8 @@
 
 #[macro_use]
 extern crate rocket;
-#[macro_use]
-extern crate itconfig;
 
+use itconfig::config;
 
 config! {
     ROCKET {
@@ -21,9 +20,9 @@ fn index() -> &'static str {
 }
 
 fn main() {
-    cfg::init();
+    config::init();
 
     rocket::ignite()
-        .mount(cfg::ROCKET::BASE_URL(), routes![index])
+        .mount(config::ROCKET::BASE_URL(), routes![index])
         .launch();
 }

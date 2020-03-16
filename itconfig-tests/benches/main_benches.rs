@@ -59,22 +59,22 @@ fn source_macro_vs_lazy_macro(c: &mut Criterion) {
 
     let source = Fun::new("source", |b, _| {
         b.iter(move || {
-            assert_eq!(cfg::TEST(), "test");
+            assert_eq!(config::TEST(), "test");
         })
     });
     let lazy = Fun::new("lazy", |b, _| {
         b.iter(move || {
-            assert_eq!(cfg::LAZY_TEST(), "test");
+            assert_eq!(config::LAZY_TEST(), "test");
         })
     });
     let source_with_default = Fun::new("source_with_default", |b, _| {
         b.iter(move || {
-            assert_eq!(cfg::TEST_WITH_DEFAULT(), "default");
+            assert_eq!(config::TEST_WITH_DEFAULT(), "default");
         })
     });
     let lazy_with_default = Fun::new("lazy_with_default", |b, _| {
         b.iter(move || {
-            assert_eq!(cfg::LAZY_TEST_WITH_DEFAULT(), "default");
+            assert_eq!(config::LAZY_TEST_WITH_DEFAULT(), "default");
         })
     });
 
