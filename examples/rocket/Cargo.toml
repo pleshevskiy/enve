@@ -8,4 +8,4 @@ edition = "2018"
 
 [dependencies]
 rocket = "0.4.2"
-itconfig = { path = '../../itconfig' }
+itconfig = { path = '../../itconfig', feature = ["macro"] }
