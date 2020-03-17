@@ -139,7 +139,7 @@ cargo test
 
 ## Available features
 
-* **default** - ["macro", "primitives", "static"]
+* **default** - ["primitives"]
 * **macro** - Activates `config!` macros for easy configure web application.
 * **array** - Add EnvString impl for vector type (uses optional `serde_json` package).
 * **primitives** - Group for features: `numbers` and `bool`.

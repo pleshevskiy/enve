@@ -117,22 +117,22 @@
 //! * **int** - Group for features: `i8`, `i16`, `i32`, `i64`, `i128` and `isize`.
 //! * **uint** - Group for features: `u8`, `u16`, `u32`, `u64`, `u128` and `usize`.
 //! * **float** - Group for features: `f32` and `f64`
-//! * **i8** - impl EnvString for i8 type
-//! * **i16** - impl EnvString for i16 type
-//! * **i32** - impl EnvString for i32 type
-//! * **i64** - impl EnvString for i64 type
-//! * **i128** - impl EnvString for i128 type
-//! * **isize** - impl EnvString for isize type
-//! * **u8** - impl EnvString for u8 type
-//! * **u16** - impl EnvString for u16 type
-//! * **u32** - impl EnvString for u32 type
-//! * **u64** - impl EnvString for u64 type
-//! * **u128** - impl EnvString for u128 type
-//! * **usize** - impl EnvString for usize type
-//! * **f32** - impl EnvString for f32 type
-//! * **f64** - impl EnvString for f64 type
-//! * **bool** - impl EnvString for bool type
-//!a
+//! * **i8** - impl EnvString for `i8` type
+//! * **i16** - impl EnvString for `i16` type
+//! * **i32** - impl EnvString for `i32` type
+//! * **i64** - impl EnvString for `i64` type
+//! * **i128** - impl EnvString for `i128` type
+//! * **isize** - impl EnvString for `isize` type
+//! * **u8** - impl EnvString for `u8` type
+//! * **u16** - impl EnvString for `u16` type
+//! * **u32** - impl EnvString for `u32` type
+//! * **u64** - impl EnvString for `u64` type
+//! * **u128** - impl EnvString for `u128` type
+//! * **usize** - impl EnvString for `usize` type
+//! * **f32** - impl EnvString for `f32` type
+//! * **f64** - impl EnvString for `f64` type
+//! * **bool** - impl EnvString for `bool` type
+//!
 
 
 // Rustc lints.
@@ -165,5 +165,4 @@ pub mod prelude {
 #[cfg(feature = "macro")]
 extern crate itconfig_macro;
 #[cfg(feature = "macro")]
-#[doc(hidden)]
 pub use itconfig_macro::*;

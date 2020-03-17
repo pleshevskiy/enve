@@ -1,6 +1,6 @@
 [package]
 name = "itconfig"
-version = "1.0.0"
+version = "1.0.1"
 authors = ["Dmitriy Pleshevskiy <dmitriy@ideascup.me>"]
 description = "Easy build a configs from environment variables and use it in globally."
 categories = ["config", "web-programming"]
@@ -58,3 +58,8 @@ bool  = []
 [badges]
 travis-ci = { repository = "icetemple/itconfig-rs" }
 maintenance = { status = "actively-developed" }
+
+
+# https://docs.rs/about
+[package.metadata.docs.rs]
+all-features = true
