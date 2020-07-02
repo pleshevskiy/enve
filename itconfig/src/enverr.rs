@@ -1,6 +1,5 @@
 use failure::Fail;
 
-
 #[derive(Debug, Fail, PartialEq)]
 pub enum EnvError {
     #[fail(display = r#"Environment variable "{}" is missing"#, env_name)]

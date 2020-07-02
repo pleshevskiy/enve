@@ -1,43 +1,42 @@
 use crate::ast::*;
-use syn::parse::{Parse, ParseStream, Result, ParseBuffer};
-use syn::token::{FatArrow, Comma, Colon, Brace, Lt};
-use syn::{braced, parenthesized, Type, Expr, Token, Lit, Attribute, Meta, MetaNameValue, Error, parse_str, MetaList, NestedMeta};
 use proc_macro2::{Ident, Span, TokenStream as TokenStream2};
-use syn::ext::IdentExt;
 use quote::quote;
+use syn::ext::IdentExt;
+use syn::parse::{Parse, ParseBuffer, ParseStream, Result};
+use syn::token::{Brace, Colon, Comma, FatArrow, Lt};
+use syn::{
+    braced, parenthesized, parse_str, Attribute, Error, Expr, Lit, Meta, MetaList, MetaNameValue,
+    NestedMeta, Token, Type,
+};
 
-fn fill_env_prefix(
-    prefix: String
-) -> Box<dyn Fn(Namespace) -> Namespace> {
+fn fill_env_prefix(prefix: String) -> Box<dyn Fn(Namespace) -> Namespace> {
     Box::new(move |mut ns| {
         let env_prefix = match &ns.env_prefix {
             None => {
-                let env_prefix = format!(
-                    "{}{}_",
-                    prefix,
-                    ns.name.clone().to_string()
-                );
+                let env_prefix = format!("{}{}_", prefix, ns.name.clone().to_string());
                 ns.env_prefix = Some(env_prefix.clone());
                 env_prefix
             }
-            Some(env_prefix) => {
-                env_prefix.clone()
-            }
+            Some(env_prefix) => env_prefix.clone(),
         };
 
         if !ns.namespaces.is_empty() {
-            ns.namespaces = ns.namespaces.into_iter()
+            ns.namespaces = ns
+                .namespaces
+                .into_iter()
                 .map(fill_env_prefix(ns.env_prefix.clone().unwrap()))
                 .collect()
         }
 
         if !ns.variables.is_empty() {
-            ns.variables = ns.variables.into_iter()
+            ns.variables = ns
+                .variables
+                .into_iter()
                 .map(|mut var| {
                     if var.env_name.is_none() {
                         var.env_name = Some(
                             format!("{}{}", env_prefix.clone(), &var.name.to_string())
-                                .to_uppercase()
+                                .to_uppercase(),
                         );
                     }
                     var
@@ -84,24 +83,27 @@ fn parse_namespace_content(
     Ok(())
 }
 
-
-fn parse_attribute(attr: Attribute, name: &'static str, var: &Option<String>) -> Result<Option<String>> {
+fn parse_attribute(
+    attr: Attribute,
+    name: &'static str,
+    var: &Option<String>,
+) -> Result<Option<String>> {
     if var.is_some() {
         let message = format!("You cannot use {} meta twice", &name);
         return Err(Error::new_spanned(attr, message));
     }
 
     match attr.parse_meta()? {
-        Meta::NameValue(MetaNameValue { lit: Lit::Str(lit_str), .. }) => {
-            Ok(Some(lit_str.value()))
-        }
+        Meta::NameValue(MetaNameValue {
+            lit: Lit::Str(lit_str),
+            ..
+        }) => Ok(Some(lit_str.value())),
         _ => {
             let message = format!("expected #[{} = \"...\"]", &name);
             Err(Error::new_spanned(attr, message))
         }
     }
 }
-
 
 impl Parse for RootNamespace {
     fn parse(input: ParseStream) -> Result<Self> {
@@ -114,15 +116,20 @@ impl Parse for RootNamespace {
             if attr.path.is_ident("config") {
                 match attr.parse_meta()? {
                     Meta::List(MetaList { nested, .. }) => {
-                        let message = format!("expected #[config(name = \"...\")] or #[config(unwrap)]");
+                        let message =
+                            format!("expected #[config(name = \"...\")] or #[config(unwrap)]");
                         match nested.first().unwrap() {
-                            NestedMeta::Meta(Meta::NameValue(MetaNameValue { path, lit: Lit::Str(lit_str), .. })) => {
+                            NestedMeta::Meta(Meta::NameValue(MetaNameValue {
+                                path,
+                                lit: Lit::Str(lit_str),
+                                ..
+                            })) => {
                                 if path.is_ident("name") {
                                     name = Some(Ident::new(&lit_str.value(), Span::call_site()));
                                 } else {
                                     Err(Error::new_spanned(attr, message))?;
                                 }
-                            },
+                            }
                             NestedMeta::Meta(Meta::Path(path)) => {
                                 if path.is_ident("unwrap") {
                                     name = None;
@@ -130,7 +137,7 @@ impl Parse for RootNamespace {
                                 } else {
                                     Err(Error::new_spanned(attr, message))?;
                                 }
-                            },
+                            }
                             _ => {
                                 Err(Error::new_spanned(attr, message))?;
                             }
@@ -157,7 +164,8 @@ impl Parse for RootNamespace {
         }
 
         let prefix = String::new();
-        let namespaces = namespaces.into_iter()
+        let namespaces = namespaces
+            .into_iter()
             .map(fill_env_prefix(prefix.clone()))
             .collect();
 
@@ -169,7 +177,6 @@ impl Parse for RootNamespace {
         })
     }
 }
-
 
 impl Parse for Namespace {
     fn parse(input: ParseStream) -> Result<Self> {
@@ -194,7 +201,6 @@ impl Parse for Namespace {
         })
     }
 }
-
 
 impl Parse for Variable {
     fn parse(input: ParseStream) -> Result<Self> {
@@ -243,7 +249,9 @@ impl Parse for Variable {
             }
             concat_parts = Some(tmp_vec);
         } else {
-            initial = input.parse::<FatArrow>().ok()
+            initial = input
+                .parse::<FatArrow>()
+                .ok()
                 .and_then(|_| input.parse::<Expr>().ok());
         };
 

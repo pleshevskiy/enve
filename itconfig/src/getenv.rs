@@ -1,6 +1,5 @@
-use std::env;
 use crate::prelude::*;
-
+use std::env;
 
 /// This function is similar as `get_env`, but it unwraps result with panic on error.
 ///
@@ -10,12 +9,11 @@ use crate::prelude::*;
 /// expected type
 ///
 pub fn get_env_or_panic<T>(env_name: &str) -> T
-    where
-        T: FromEnvString
+where
+    T: FromEnvString,
 {
     get_env(env_name).unwrap_or_else(make_panic)
 }
-
 
 /// Try to read environment variable and parse to expected type. You may to put to argument
 /// any type with `FromEnvString` trait.
@@ -38,14 +36,15 @@ pub fn get_env_or_panic<T>(env_name: &str) -> T
 /// ```
 ///
 pub fn get_env<T>(env_name: &str) -> Result<T, EnvError>
-    where
-        T: FromEnvString
+where
+    T: FromEnvString,
 {
     get_env_or(env_name, |_| {
-        Err(EnvError::MissingVariable { env_name: env_name.to_string() })
+        Err(EnvError::MissingVariable {
+            env_name: env_name.to_string(),
+        })
     })
 }
-
 
 /// This function is similar as `get_env_or_panic`, but you can pass default value for
 /// environment variable with `ToEnvString` trait.
@@ -69,14 +68,12 @@ pub fn get_env<T>(env_name: &str) -> Result<T, EnvError>
 /// ```
 ///
 pub fn get_env_or_default<T, D>(env_name: &str, default: D) -> T
-    where
-        T: FromEnvString,
-        D: ToEnvString,
+where
+    T: FromEnvString,
+    D: ToEnvString,
 {
-    get_env_or(env_name, |_| Ok(default.to_env_string()))
-        .unwrap_or_else(make_panic)
+    get_env_or(env_name, |_| Ok(default.to_env_string())).unwrap_or_else(make_panic)
 }
-
 
 /// This function is similar as `get_env_or_default`, but the default value will be set to environment
 /// variable, if env variable is missed.
@@ -103,44 +100,40 @@ pub fn get_env_or_default<T, D>(env_name: &str, default: D) -> T
 /// ```
 ///
 pub fn get_env_or_set_default<T, D>(env_name: &str, default: D) -> T
-    where
-        T: FromEnvString,
-        D: ToEnvString,
+where
+    T: FromEnvString,
+    D: ToEnvString,
 {
     get_env_or(env_name, |_| {
         let val = default.to_env_string();
         env::set_var(env_name, val.as_str());
         Ok(val)
-    }).unwrap_or_else(make_panic)
+    })
+    .unwrap_or_else(make_panic)
 }
-
 
 /// This function returns env variable as `EnvString` structure. You can pass callback for custom
 /// default expression. Callback should return `EnvString` value or `EnvError`
 pub fn get_env_or<T, F>(env_name: &str, cb: F) -> Result<T, EnvError>
-    where
-        T: FromEnvString,
-        F: FnOnce(env::VarError) -> Result<EnvString, EnvError>
+where
+    T: FromEnvString,
+    F: FnOnce(env::VarError) -> Result<EnvString, EnvError>,
 {
     env::var(env_name)
         .map(|s| s.to_env_string())
         .or_else(cb)
-        .and_then(|env_str| {
-            parse_env_variable(env_name, env_str)
-        })
+        .and_then(|env_str| parse_env_variable(env_name, env_str))
 }
-
 
 #[doc(hidden)]
 fn parse_env_variable<T>(env_name: &str, env_str: EnvString) -> Result<T, EnvError>
-    where
-        T: FromEnvString
+where
+    T: FromEnvString,
 {
-    env_str
-        .parse::<T>()
-        .map_err(|_| EnvError::FailedToParse { env_name: env_name.to_string() })
+    env_str.parse::<T>().map_err(|_| EnvError::FailedToParse {
+        env_name: env_name.to_string(),
+    })
 }
-
 
 #[doc(hidden)]
 fn make_panic<T>(e: EnvError) -> T {

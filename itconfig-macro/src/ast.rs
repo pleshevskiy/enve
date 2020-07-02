@@ -1,6 +1,5 @@
 use proc_macro2::TokenStream as TokenStream2;
-use syn::{Type, Expr, Ident, Attribute};
-
+use syn::{Attribute, Expr, Ident, Type};
 
 pub struct RootNamespace {
     pub name: Option<Ident>,
@@ -9,7 +8,6 @@ pub struct RootNamespace {
     pub meta: Vec<Attribute>,
 }
 
-
 pub struct Namespace {
     pub name: Ident,
     pub variables: Vec<Variable>,
@@ -17,7 +15,6 @@ pub struct Namespace {
     pub env_prefix: Option<String>,
     pub meta: Vec<Attribute>,
 }
-
 
 pub struct Variable {
     pub is_static: bool,

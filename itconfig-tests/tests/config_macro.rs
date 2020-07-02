@@ -10,7 +10,6 @@ mod test_case_1 {
     }
 }
 
-
 mod test_case_2 {
     use std::env;
 
@@ -27,7 +26,6 @@ mod test_case_2 {
         env::remove_var("DEBUG");
     }
 }
-
 
 mod test_case_3 {
     itconfig::config! {
@@ -104,7 +102,6 @@ mod test_case_6 {
     }
 }
 
-
 mod test_case_7 {
     use std::env;
 
@@ -158,7 +155,6 @@ mod test_case_7 {
     }
 }
 
-
 mod test_case_8 {
     itconfig::config! {
         #![config(name = "custom_config_name")]
@@ -172,7 +168,6 @@ mod test_case_8 {
         assert_eq!(custom_config_name::DEBUG(), true);
     }
 }
-
 
 mod test_case_9 {
     use std::env;
@@ -217,7 +212,6 @@ mod test_case_10 {
     }
 }
 
-
 mod test_case_11 {
     itconfig::config! {
         FIRST {
@@ -237,7 +231,6 @@ mod test_case_11 {
         assert_eq!(config::FIRST::SECOND::THIRD::FOO(), 50);
     }
 }
-
 
 mod test_case_12 {
     use std::env;
@@ -261,7 +254,6 @@ mod test_case_12 {
     }
 }
 
-
 mod test_case_13 {
     use std::env;
 
@@ -284,7 +276,6 @@ mod test_case_13 {
         assert_eq!(config::APP::RECIPES_PER_PAGE(), 95);
     }
 }
-
 
 mod test_case_14 {
     use std::env;
@@ -312,7 +303,6 @@ mod test_case_14 {
     }
 }
 
-
 mod test_case_15 {
     use std::env;
 
@@ -322,7 +312,6 @@ mod test_case_15 {
         DEFAULT_ENV_UINT: u32 => 40,
         DEFAULT_ENV_FLOAT: f64 => 40.9,
     }
-
 
     #[test]
     fn setting_default_env_variable() {
@@ -334,7 +323,6 @@ mod test_case_15 {
         assert_eq!(env::var("DEFAULT_ENV_FLOAT"), Ok("40.9".to_string()));
     }
 }
-
 
 mod test_case_16 {
     use std::env;
@@ -360,10 +348,12 @@ mod test_case_16 {
         env::set_var("POSTGRES_DB", "test");
 
         config::init();
-        assert_eq!(config::DATABASE_URL(), String::from("postgres://user:pass@localhost/test"));
+        assert_eq!(
+            config::DATABASE_URL(),
+            String::from("postgres://user:pass@localhost/test")
+        );
     }
 }
-
 
 mod test_case_17 {
     use std::env;
@@ -376,16 +366,17 @@ mod test_case_17 {
         ),
     }
 
-
     #[test]
     fn setting_default_concat_env_variable() {
         env::set_var("SETTING_DEFAULT_CONCAT_ENV_VARIABLE", "custom");
 
         config::init();
-        assert_eq!(env::var("DEFAULT_CONCAT_ENV"), Ok("string/custom".to_string()));
+        assert_eq!(
+            env::var("DEFAULT_CONCAT_ENV"),
+            Ok("string/custom".to_string())
+        );
     }
 }
-
 
 mod test_case_18 {
     itconfig::config! {
@@ -408,7 +399,6 @@ mod test_case_18 {
     }
 }
 
-
 mod test_case_19 {
     use std::env;
 
@@ -425,7 +415,6 @@ mod test_case_19 {
         ),
     }
 
-
     #[test]
     fn default_value_for_concatenate_env_parameter() {
         config::init();
@@ -435,7 +424,6 @@ mod test_case_19 {
         );
     }
 }
-
 
 mod test_case_20 {
     use std::env;
@@ -466,7 +454,6 @@ mod test_case_20 {
     }
 }
 
-
 mod test_case_21 {
     use std::env;
     use std::env::VarError;
@@ -486,7 +473,6 @@ mod test_case_21 {
         }
     }
 
-
     #[test]
     fn concatenated_environment_variable_in_namespace() {
         config::init();
@@ -497,7 +483,6 @@ mod test_case_21 {
         assert_eq!(env::var("CONCAT_ENVVAR"), Err(VarError::NotPresent));
     }
 }
-
 
 mod test_case_22 {
     itconfig::config! {
@@ -522,7 +507,6 @@ mod test_case_22 {
             STATIC_CONCAT_PART => "part",
         ),
     }
-
 
     #[test]
     fn static_variables() {
