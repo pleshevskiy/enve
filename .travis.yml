@@ -11,6 +11,12 @@ before_cache:
   - rm -rf /home/travis/.cargo/registry
 script:
   - |
+    if [[ "$TRAVIS_RUST_VERSION" == stable ]]
+    then
+      rustup component add rustfmt
+      cargo fmt --all -- --check
+    fi
+  - |
     rustc --version &&
     cargo test --all-features
 matrix:
