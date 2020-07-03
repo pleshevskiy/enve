@@ -1,6 +1,6 @@
-use std::env;
-use itconfig::*;
 use itconfig::EnvError::*;
+use itconfig::*;
+use std::env;
 
 #[test]
 #[should_panic(expected = "Environment variable \"TEST_CASE_1\" is missing")]

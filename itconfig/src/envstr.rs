@@ -1,11 +1,9 @@
 use std::ops::Deref;
 
-
 #[doc(hidden)]
 pub trait ToEnvString {
     fn to_env_string(&self) -> EnvString;
 }
-
 
 #[doc(hidden)]
 pub trait FromEnvString: Sized {
@@ -14,17 +12,15 @@ pub trait FromEnvString: Sized {
     fn from_env_string(s: &EnvString) -> Result<Self, Self::Err>;
 }
 
-
 impl<T> ToEnvString for T
-    where
-        T: ToString
+where
+    T: ToString,
 {
     #[inline]
     fn to_env_string(&self) -> EnvString {
         EnvString(self.to_string())
     }
 }
-
 
 #[doc(hidden)]
 macro_rules! from_env_string_numbers_impl {
@@ -60,7 +56,6 @@ from_env_string_numbers_impl![
     f64   => "f64"
 ];
 
-
 #[cfg(feature = "bool")]
 impl FromEnvString for bool {
     type Err = ();
@@ -68,12 +63,10 @@ impl FromEnvString for bool {
     fn from_env_string(s: &EnvString) -> Result<Self, Self::Err> {
         match s.to_lowercase().as_str() {
             "true" | "t" | "yes" | "y" | "on" | "1" => Ok(true),
-            _ => Ok(false)
+            _ => Ok(false),
         }
     }
 }
-
-
 
 #[cfg(feature = "array")]
 #[derive(Debug)]
@@ -82,21 +75,17 @@ pub enum ArrayEnvError {
     FailedToParse,
 }
 
-
 #[cfg(feature = "array")]
 impl<T> FromEnvString for Vec<T>
-    where T: FromEnvString
+where
+    T: FromEnvString,
 {
     type Err = ArrayEnvError;
 
     fn from_env_string(s: &EnvString) -> Result<Self, Self::Err> {
         serde_json::from_str::<Vec<isize>>(s.trim())
-            .map(|vec| {
-                vec.iter().map(|v| v.to_string()).collect::<Vec<String>>()
-            })
-            .or_else(|_| {
-                serde_json::from_str::<Vec<String>>(s.trim())
-            })
+            .map(|vec| vec.iter().map(|v| v.to_string()).collect::<Vec<String>>())
+            .or_else(|_| serde_json::from_str::<Vec<String>>(s.trim()))
             .map_err(|_| ArrayEnvError::InvalidType)
             .and_then(|vec| {
                 vec.iter()
@@ -110,7 +99,6 @@ impl<T> FromEnvString for Vec<T>
     }
 }
 
-
 impl FromEnvString for String {
     type Err = ();
 
@@ -119,7 +107,6 @@ impl FromEnvString for String {
     }
 }
 
-
 impl FromEnvString for &'static str {
     type Err = ();
 
@@ -127,7 +114,6 @@ impl FromEnvString for &'static str {
         Ok(Box::leak(s.0.clone().into_boxed_str()))
     }
 }
-
 
 #[doc(hidden)]
 #[derive(Debug, PartialEq, Clone)]
@@ -146,5 +132,3 @@ impl Deref for EnvString {
         &self.0
     }
 }
-
-

@@ -1,10 +1,9 @@
-use itconfig::config;
 use bytes::buf::BufExt;
 use futures_util::{stream, StreamExt};
 use hyper::client::HttpConnector;
 use hyper::service::{make_service_fn, service_fn};
 use hyper::{header, Body, Client, Method, Request, Response, Server, StatusCode};
-
+use itconfig::config;
 
 config! {
     HYPER {
@@ -25,16 +24,13 @@ config! {
     }
 }
 
-
 type GenericError = Box<dyn std::error::Error + Send + Sync>;
 type HyperResult<T> = std::result::Result<T, GenericError>;
-
 
 const INDEX: &'static [u8] = b"<a href=\"test.html\">test.html</a>";
 const INTERNAL_SERVER_ERROR: &'static [u8] = b"Internal Server Error";
 const NOTFOUND: &'static [u8] = b"Not Found";
 const POST_DATA: &'static str = r#"{"original": "data"}"#;
-
 
 async fn client_request_response(client: &Client<HttpConnector>) -> HyperResult<Response<Body>> {
     let req = Request::builder()

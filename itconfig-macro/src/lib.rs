@@ -1,16 +1,15 @@
 #![recursion_limit = "256"]
 
 mod ast;
-mod parse;
 mod expand;
+mod parse;
 
 extern crate proc_macro;
 extern crate proc_macro2;
 use self::proc_macro::TokenStream;
+use ast::RootNamespace;
 use quote::ToTokens;
 use syn::parse_macro_input;
-use ast::RootNamespace;
-
 
 /// ### _This API requires the following crate features to be activated: `macro`_
 ///

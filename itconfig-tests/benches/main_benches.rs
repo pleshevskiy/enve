@@ -1,4 +1,4 @@
-use criterion::{Criterion, criterion_main, criterion_group, Fun};
+use criterion::{criterion_group, criterion_main, Criterion, Fun};
 use std::env;
 
 #[macro_use]
@@ -6,17 +6,13 @@ extern crate lazy_static;
 #[macro_use]
 extern crate itconfig;
 
-
-
 fn setup_env_var(key: &'static str, initial: String) {
     env::set_var(key, initial);
 }
 
-
 fn source_get_env() -> u32 {
     itconfig::get_env::<u32>("TEST").unwrap()
 }
-
 
 fn lazy_get_env() -> u32 {
     lazy_static! {
@@ -26,14 +22,11 @@ fn lazy_get_env() -> u32 {
     return *RES;
 }
 
-
 fn source_vs_lazy(c: &mut Criterion) {
     setup_env_var("TEST", "1".to_string());
 
     let source = Fun::new("source", |b, _| {
-        b.iter(move || {
-            assert_eq!(source_get_env(), 1)
-        })
+        b.iter(move || assert_eq!(source_get_env(), 1))
     });
     let lazy = Fun::new("lazy", |b, _| {
         b.iter(move || {
@@ -43,7 +36,6 @@ fn source_vs_lazy(c: &mut Criterion) {
 
     c.bench_functions("get_env", vec![source, lazy], 0);
 }
-
 
 fn source_macro_vs_lazy_macro(c: &mut Criterion) {
     config! {
@@ -82,7 +74,6 @@ fn source_macro_vs_lazy_macro(c: &mut Criterion) {
 
     c.bench_functions("macro", funcs, 0);
 }
-
 
 criterion_group! {
     benches,

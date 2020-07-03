@@ -1,16 +1,13 @@
 use crate::ast::*;
-use quote::{quote, ToTokens, TokenStreamExt};
 use proc_macro2::TokenStream as TokenStream2;
-
+use quote::{quote, ToTokens, TokenStreamExt};
 
 fn vec_to_token_stream_2<T>(input: &Vec<T>) -> Vec<TokenStream2>
-    where T: ToTokens
+where
+    T: ToTokens,
 {
-    input.iter()
-        .map(|ns| ns.into_token_stream())
-        .collect()
+    input.iter().map(|ns| ns.into_token_stream()).collect()
 }
-
 
 impl ToTokens for RootNamespace {
     fn to_tokens(&self, tokens: &mut TokenStream2) {
@@ -18,7 +15,9 @@ impl ToTokens for RootNamespace {
         let variables = vec_to_token_stream_2(&self.variables);
         let namespaces = vec_to_token_stream_2(&self.namespaces);
 
-        let init_variables = self.variables.iter()
+        let init_variables = self
+            .variables
+            .iter()
             .map(|var| {
                 let name = &var.name;
                 let var_meta = vec_to_token_stream_2(&var.meta);
@@ -29,7 +28,9 @@ impl ToTokens for RootNamespace {
                 )
             })
             .collect::<Vec<TokenStream2>>();
-        let init_namespaces = self.namespaces.iter()
+        let init_namespaces = self
+            .namespaces
+            .iter()
             .map(|ns| {
                 let name = &ns.name;
                 let ns_meta = vec_to_token_stream_2(&ns.meta);
@@ -43,12 +44,11 @@ impl ToTokens for RootNamespace {
 
         let inner_meta: Vec<TokenStream2> = if name.is_none() {
             vec![]
-        } else if self.meta.is_empty()  {
+        } else if self.meta.is_empty() {
             vec![quote!(#![allow(non_snake_case)])]
         } else {
             vec_to_token_stream_2(&self.meta)
         };
-
 
         let inner_rules = quote! {
             #(#inner_meta)*
@@ -63,19 +63,16 @@ impl ToTokens for RootNamespace {
             }
         };
 
-        tokens.append_all(
-            match self.name.as_ref() {
-                None => inner_rules,
-                Some(name) => quote! {
-                    pub mod #name {
-                        #inner_rules
-                    }
+        tokens.append_all(match self.name.as_ref() {
+            None => inner_rules,
+            Some(name) => quote! {
+                pub mod #name {
+                    #inner_rules
                 }
-            }
-        );
+            },
+        });
     }
 }
-
 
 impl ToTokens for Namespace {
     fn to_tokens(&self, tokens: &mut TokenStream2) {
@@ -84,7 +81,9 @@ impl ToTokens for Namespace {
         let namespaces = vec_to_token_stream_2(&self.namespaces);
         let meta = vec_to_token_stream_2(&self.meta);
 
-        let init_variables = self.variables.iter()
+        let init_variables = self
+            .variables
+            .iter()
             .map(|var| {
                 let name = &var.name;
                 let var_meta = vec_to_token_stream_2(&var.meta);
@@ -95,7 +94,9 @@ impl ToTokens for Namespace {
                 )
             })
             .collect::<Vec<TokenStream2>>();
-        let init_namespaces = self.namespaces.iter()
+        let init_namespaces = self
+            .namespaces
+            .iter()
             .map(|ns| {
                 let name = &ns.name;
                 let ns_meta = vec_to_token_stream_2(&ns.meta);
@@ -123,12 +124,13 @@ impl ToTokens for Namespace {
     }
 }
 
-
 impl ToTokens for Variable {
     fn to_tokens(&self, tokens: &mut TokenStream2) {
         let ty = &self.ty;
         let name = &self.name;
-        let env_name = &self.env_name.clone()
+        let env_name = &self
+            .env_name
+            .clone()
             .unwrap_or(name.to_string().to_uppercase());
         let meta = vec_to_token_stream_2(&self.meta);
 

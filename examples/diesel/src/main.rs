@@ -5,16 +5,14 @@ mod db;
 mod models;
 mod schema;
 
-use itconfig::config;
-use dotenv::dotenv;
-use diesel::prelude::*;
 use crate::models::*;
-
+use diesel::prelude::*;
+use dotenv::dotenv;
+use itconfig::config;
 
 config! {
     DATABASE_URL,
 }
-
 
 fn main() {
     dotenv().ok();
@@ -32,11 +30,11 @@ fn main() {
     }
 }
 
-
 fn get_posts(connection: &PgConnection) -> Vec<Post> {
     use crate::schema::posts::dsl::*;
 
-    posts.filter(published.eq(true))
+    posts
+        .filter(published.eq(true))
         .limit(5)
         .get_results::<Post>(connection)
         .expect("Error loading posts")

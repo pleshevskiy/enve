@@ -134,14 +134,13 @@
 //! * **bool** - impl EnvString for `bool` type
 //!
 
-
 // Rustc lints.
 #![deny(
     missing_debug_implementations,
     unsafe_code,
     unstable_features,
     unused_imports,
-    unused_qualifications,
+    unused_qualifications
 )]
 
 /////////////////////////////////////////////////////////////////////////////
@@ -150,17 +149,16 @@
 extern crate failure;
 
 mod enverr;
-mod getenv;
 pub mod envstr;
+mod getenv;
 
-pub use self::getenv::*;
 pub use self::enverr::*;
+pub use self::getenv::*;
 
 pub mod prelude {
-    pub use crate::envstr::*;
     pub use crate::enverr::*;
+    pub use crate::envstr::*;
 }
-
 
 #[cfg(feature = "macro")]
 extern crate itconfig_macro;
