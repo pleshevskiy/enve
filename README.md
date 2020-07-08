@@ -85,7 +85,8 @@ config! {
 }
 
 fn main () {
-    // dotenv().ok();
+    // dotenv().expect("dotenv setup to be successful");
+    // or
     env::set_var("FEATURE_NEW_MENU", "t");
     
     config::init();
@@ -96,9 +97,7 @@ fn main () {
 }
 ```
 
-
-Macro is an optional feature, enabled by default. You can install itconfig without default
-features and use this lib as shown below
+Macro is an optional feature, disabled by default. You can use this library without macro
 
 ```rust
 use itconfig::*;
@@ -106,6 +105,8 @@ use std::env;
 // use dotenv::dotenv;
 
 fn main() {
+    // dotenv().expect("dotenv setup to be successful");
+    // or
     env::set_var("DATABASE_URL", "postgres://127.0.0.1:5432/test");
 
     let database_url = get_env::<String>("DATABASE_URL").unwrap();

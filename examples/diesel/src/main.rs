@@ -15,7 +15,7 @@ config! {
 }
 
 fn main() {
-    dotenv().ok();
+    dotenv().expect("dotenv setup to be successful");
     config::init();
 
     let connection = db::establish_connection();
