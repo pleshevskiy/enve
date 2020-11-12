@@ -137,9 +137,9 @@
 //!
 
 // Rustc lints.
+#![forbid(unsafe_code)]
 #![deny(
     missing_debug_implementations,
-    unsafe_code,
     unstable_features,
     unused_imports,
     unused_qualifications
