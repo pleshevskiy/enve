@@ -15,8 +15,7 @@ readme = "README.md"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-failure = { version = "0.1.7", features = ["derive"]}
-serde_json = { version = "1.0.44", optional = true }
+serde_json = { version = "1", optional = true }
 itconfig-macro = { version = "1.0", path = "../itconfig-macro", optional = true }
 
 [dev-dependencies]

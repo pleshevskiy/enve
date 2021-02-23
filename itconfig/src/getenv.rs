@@ -40,9 +40,7 @@ where
     T: FromEnvString,
 {
     get_env_or(env_name, |_| {
-        Err(EnvError::MissingVariable {
-            env_name: env_name.to_string(),
-        })
+        Err(EnvError::MissingVariable(env_name.to_string()))
     })
 }
 
@@ -130,9 +128,9 @@ fn parse_env_variable<T>(env_name: &str, env_str: EnvString) -> Result<T, EnvErr
 where
     T: FromEnvString,
 {
-    env_str.parse::<T>().map_err(|_| EnvError::FailedToParse {
-        env_name: env_name.to_string(),
-    })
+    env_str
+        .parse::<T>()
+        .map_err(|_| EnvError::FailedToParse(env_name.to_string()))
 }
 
 #[doc(hidden)]

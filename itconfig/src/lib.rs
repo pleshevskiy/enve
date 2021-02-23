@@ -144,22 +144,21 @@
     unused_imports,
     unused_qualifications
 )]
+#![deny(clippy::all)]
+#![allow(clippy::needless_doctest_main)]
 
 /////////////////////////////////////////////////////////////////////////////
 
-#[macro_use]
-extern crate failure;
-
-mod enverr;
 pub mod envstr;
+mod error;
 mod getenv;
 
-pub use self::enverr::*;
+pub use self::error::*;
 pub use self::getenv::*;
 
 pub mod prelude {
-    pub use crate::enverr::*;
     pub use crate::envstr::*;
+    pub use crate::error::*;
 }
 
 #[cfg(feature = "macro")]

@@ -20,7 +20,7 @@ fn get_env_with_invalid_value() {
 fn get_result_of_missing_env() {
     let env_name = String::from("TEST_CASE_3");
     let env_val = get_env::<String>(&env_name);
-    assert_eq!(env_val, Err(MissingVariable { env_name }))
+    assert_eq!(env_val, Err(MissingVariable(env_name)))
 }
 
 #[test]
@@ -28,7 +28,7 @@ fn get_result_of_env_with_invalid_value() {
     let env_name = String::from("TEST_CASE_4");
     env::set_var(&env_name, "30r");
     let env_val = get_env::<u32>(&env_name);
-    assert_eq!(env_val, Err(FailedToParse { env_name }))
+    assert_eq!(env_val, Err(FailedToParse(env_name)))
 }
 
 #[test]
