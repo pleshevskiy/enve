@@ -1,6 +1,6 @@
 [package]
 name = "itconfig-macro"
-version = "1.0.1"
+version = "1.0.2"
 authors = ["Dmitriy Pleshevskiy <dmitriy@ideascup.me>"]
 description = "Easy build a configs from environment variables and use it in globally."
 categories = ["config", "web-programming"]
@@ -17,9 +17,9 @@ readme = "../itconfig/README.md"
 proc-macro = true
 
 [dependencies]
-syn = "1.0.16"
-quote = "1.0.3"
-proc-macro2 = "1.0.9"
+syn = "1.0.60"
+quote = "1.0.9"
+proc-macro2 = "1.0.24"
 
 [dev-dependencies]
 itconfig = { path = "../itconfig" }
