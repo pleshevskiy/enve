@@ -9,4 +9,4 @@ edition = "2018"
 [dependencies]
 itconfig = { path = "../../itconfig", default-features = false, features = ["macro"] }
 dotenv = "0.15.0"
-diesel = { version = "1.4.3", features = ["postgres"] }
+diesel = { version = "1.4.5", features = ["postgres"] }
