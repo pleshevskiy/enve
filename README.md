@@ -2,7 +2,7 @@
 [![Build Status](https://travis-ci.org/icetemple/itconfig-rs.svg?branch=master)](https://travis-ci.org/icetemple/itconfig-rs)
 [![unsafe forbidden](https://img.shields.io/badge/unsafe-forbidden-success.svg)](https://github.com/rust-secure-code/safety-dance/)
 [![Documentation](https://docs.rs/itconfig/badge.svg)](https://docs.rs/itconfig)
-[![Crates.io](https://img.shields.io/badge/crates.io-v1.0.1-blue.svg?longCache=true)](https://crates.io/crates/itconfig) 
+[![Crates.io](https://img.shields.io/badge/crates.io-v1.0.3-blue.svg?longCache=true)](https://crates.io/crates/itconfig) 
 [![Join the chat at https://gitter.im/icetemple/itconfig-rs](https://badges.gitter.im/icetemple/itconfig-rs.svg)](https://gitter.im/icetemple/itconfig-rs?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 Easy build a configs from environment variables and use it in globally.
@@ -47,10 +47,10 @@ use std::env;
 
 config! {
     DEBUG: bool => false,
-    
+
     #[env_name = "APP_HOST"]
     HOST: String => "127.0.0.1",
-    
+
     DATABASE_URL < (
         "postgres://",
         POSTGRES_USERNAME => "user",
@@ -61,24 +61,24 @@ config! {
         "/",
         POSTGRES_DB => "test",
     ),
-    
+
     APP {
         static BASE_URL => "/api", // &'static str by default
-    
+
         ARTICLE {
             static PER_PAGE: u32 => 15,
         }
-        
+
         #[cfg(feature = "companies")]
         COMPANY {
             #[env_name = "INSTITUTIONS_PER_PAGE"]
             static PER_PAGE: u32 => 15,
         }
     }
-    
+
     FEATURE {
         NEW_MENU: bool => false,
-    
+
         COMPANY {
             PROFILE: bool => false,
         }
@@ -89,11 +89,11 @@ fn main () {
     // dotenv().expect("dotenv setup to be successful");
     // or
     env::set_var("FEATURE_NEW_MENU", "t");
-    
+
     config::init();
     assert_eq!(config::HOST(), String::from("127.0.0.1"));
     assert_eq!(config::DATABASE_URL(), String::from("postgres://user:pass@localhost:5432/test"));
-    assert_eq!(config::APP:ARTICLE:PER_PAGE(), 15);
+    assert_eq!(config::APP::ARTICLE::PER_PAGE(), 15);
     assert_eq!(config::FEATURE::NEW_MENU(), true);
 }
 ```
@@ -119,24 +119,8 @@ fn main() {
 ## Running tests
 
 ```bash
-cargo test
+cargo test --all-features
 ```
-
-
-## Roadmap
-
-* [x] Add namespace for variables
-* [x] Custom env name
-* [x] Support feature config and other meta directives
-* [x] Add default value to env if env is not found
-* [x] Concat env variables to one variable
-* [x] Add nested namespaces
-* [x] Support meta for namespaces
-* [x] Support array type
-* [x] Rewrite to proc macro
-* [ ] Support hashmap type
-* [ ] Support custom env type
-* [ ] Common configuration for namespace variables
 
 
 ## Available features
