@@ -1,6 +1,6 @@
 [package]
 name = "itconfig"
-version = "1.0.4"
+version = "1.0.5"
 authors = ["Dmitriy Pleshevskiy <dmitriy@ideascup.me>"]
 description = "Easy build a configs from environment variables and use it in globally."
 categories = ["config", "web-programming"]
