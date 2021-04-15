@@ -2,7 +2,9 @@ use proc_macro2::TokenStream as TokenStream2;
 use quote::ToTokens;
 use syn::{Path, Type};
 
-pub fn vec_to_token_stream_2<T>(input: &Vec<T>) -> Vec<TokenStream2>
+const OPTION_PATH_IDENTS: &[&str] = &["Option|", "std|option|Option|", "core|option|Option|"];
+
+pub fn vec_to_token_stream_2<T>(input: &[T]) -> Vec<TokenStream2>
 where
     T: ToTokens,
 {
@@ -21,10 +23,7 @@ fn path_ident(path: &Path) -> String {
 }
 
 fn is_option_path_ident(path_ident: String) -> bool {
-    vec!["Option|", "std|option|Option|", "core|option|Option|"]
-        .into_iter()
-        .find(|s| &path_ident == *s)
-        .is_some()
+    OPTION_PATH_IDENTS.iter().any(|s| path_ident == *s)
 }
 
 pub fn is_option_type(ty: &Type) -> bool {

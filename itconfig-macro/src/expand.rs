@@ -125,7 +125,7 @@ impl ToTokens for Variable {
         let env_name = &self
             .env_name
             .clone()
-            .unwrap_or(name.to_string().to_uppercase());
+            .unwrap_or_else(|| name.to_string().to_uppercase());
         let meta = vec_to_token_stream_2(&self.meta);
 
         let get_variable: TokenStream2 = if self.concat_parts.is_some() {
