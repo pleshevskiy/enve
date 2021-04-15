@@ -113,7 +113,6 @@
 //!
 //! * **default** - ["primitives"]
 //! * **macro** - Activates `config!` macros for easy configure web application.
-//! * **array** - Add EnvString impl for vector type (uses optional `serde_json` package).
 //! * **primitives** - Group for features: `numbers` and `bool`.
 //! * **numbers** - Group for features: `int`, `uint` and `float`.
 //! * **int** - Group for features: `i8`, `i16`, `i32`, `i64`, `i128` and `isize`.
@@ -134,6 +133,7 @@
 //! * **f32** - impl EnvString for `f32` type
 //! * **f64** - impl EnvString for `f64` type
 //! * **bool** - impl EnvString for `bool` type
+//! * **json_array** - Add EnvString impl for vector type (uses optional `serde_json` package). ⚠ **_DEPRECATED_**
 //!
 
 // Rustc lints.

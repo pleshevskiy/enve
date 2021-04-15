@@ -1,5 +1,30 @@
 use std::ops::Deref;
 
+/// Wrapper under String type.
+///
+/// When we read the environment variable, we automatically convert the value
+/// to EnvString and then convert it to your expected type.
+///
+#[derive(Debug, PartialEq, Clone)]
+pub struct EnvString(String);
+
+impl<T> From<T> for EnvString
+where
+    T: ToEnvString,
+{
+    fn from(val: T) -> Self {
+        val.to_env_string()
+    }
+}
+
+impl Deref for EnvString {
+    type Target = String;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
 /// A trait for converting value to EnvString.
 ///
 /// This trait automatically implemented for any type which implements the
@@ -94,15 +119,40 @@ impl FromEnvString for bool {
     }
 }
 
-#[doc(hidden)]
-#[cfg(feature = "array")]
+impl FromEnvString for String {
+    type Err = ();
+
+    fn from_env_string(s: &EnvString) -> Result<Self, Self::Err> {
+        Ok(s.0.clone())
+    }
+}
+
+impl FromEnvString for &'static str {
+    type Err = ();
+
+    fn from_env_string(s: &EnvString) -> Result<Self, Self::Err> {
+        Ok(Box::leak(s.0.clone().into_boxed_str()))
+    }
+}
+
+//===========================================================================//
+// DEPRECATED                                                                //
+//===========================================================================//
+
+/// Error type for json array implementation
+#[cfg(feature = "json_array")]
 #[derive(Debug)]
+#[deprecated(since = "1.1.0")]
 pub enum ArrayEnvError {
+    /// Invalid type.
     InvalidType,
+
+    /// Failed to parse environment variable
     FailedToParse,
 }
 
-#[cfg(feature = "array")]
+#[cfg(feature = "json_array")]
+#[allow(deprecated)]
 impl<T> FromEnvString for Vec<T>
 where
     T: FromEnvString,
@@ -122,46 +172,5 @@ where
                     })
                     .collect::<Result<Vec<T>, _>>()
             })
-    }
-}
-
-impl FromEnvString for String {
-    type Err = ();
-
-    fn from_env_string(s: &EnvString) -> Result<Self, Self::Err> {
-        Ok(s.0.clone())
-    }
-}
-
-impl FromEnvString for &'static str {
-    type Err = ();
-
-    fn from_env_string(s: &EnvString) -> Result<Self, Self::Err> {
-        Ok(Box::leak(s.0.clone().into_boxed_str()))
-    }
-}
-
-/// Wrapper under String type.
-///
-/// When we read the environment variable, we automatically convert the value
-/// to EnvString and then convert it to your expected type.
-///
-#[derive(Debug, PartialEq, Clone)]
-pub struct EnvString(String);
-
-impl<T> From<T> for EnvString
-where
-    T: ToEnvString,
-{
-    fn from(val: T) -> Self {
-        val.to_env_string()
-    }
-}
-
-impl Deref for EnvString {
-    type Target = String;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
     }
 }
