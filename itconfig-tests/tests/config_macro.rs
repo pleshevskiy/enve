@@ -537,6 +537,11 @@ mod test_case_23 {
 
     itconfig::config! {
         SOMETHING: Option<&'static str>,
+        #[env_name = "SOMETHING"]
+        STD_SOMETHING: std::option::Option<&'static str>,
+        #[env_name = "SOMETHING"]
+        CORE_SOMETHING: core::option::Option<&'static str>,
+
         NOTHING: Option<&'static str>,
     }
 
@@ -547,6 +552,8 @@ mod test_case_23 {
         env::set_var("SOMETHING", "hello world");
 
         assert_eq!(config::SOMETHING(), Some("hello world"));
+        assert_eq!(config::STD_SOMETHING(), Some("hello world"));
+        assert_eq!(config::CORE_SOMETHING(), Some("hello world"));
         assert_eq!(config::NOTHING(), None);
     }
 }
