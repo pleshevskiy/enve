@@ -1,15 +1,7 @@
 use crate::ast::*;
+use crate::utils::{is_option_type, vec_to_token_stream_2};
 use proc_macro2::TokenStream as TokenStream2;
 use quote::{quote, ToTokens, TokenStreamExt};
-use syn::Path;
-use syn::Type;
-
-fn vec_to_token_stream_2<T>(input: &Vec<T>) -> Vec<TokenStream2>
-where
-    T: ToTokens,
-{
-    input.iter().map(|ns| ns.into_token_stream()).collect()
-}
 
 impl ToTokens for RootNamespace {
     fn to_tokens(&self, tokens: &mut TokenStream2) {
@@ -172,32 +164,5 @@ impl ToTokens for Variable {
                 }
             ));
         }
-    }
-}
-
-fn path_ident(path: &Path) -> String {
-    path.segments
-        .iter()
-        .into_iter()
-        .fold(String::with_capacity(250), |mut acc, v| {
-            acc.push_str(&v.ident.to_string());
-            acc.push('|');
-            acc
-        })
-}
-
-fn is_option_path_ident(path_ident: String) -> bool {
-    vec!["Option|", "std|option|Option|", "core|option|Option|"]
-        .into_iter()
-        .find(|s| &path_ident == *s)
-        .is_some()
-}
-
-fn is_option_type(ty: &Type) -> bool {
-    match ty {
-        Type::Path(ty_path) => {
-            ty_path.qself.is_none() && is_option_path_ident(path_ident(&ty_path.path))
-        }
-        _ => false,
     }
 }
