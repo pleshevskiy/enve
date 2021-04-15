@@ -1,20 +1,46 @@
 use std::ops::Deref;
 
-#[doc(hidden)]
+/// A trait for converting value to EnvString.
+///
+/// This trait automatically implemented for any type which implements the
+/// [`Display`] trait. As such, `ToEnvString` shouldn't be implemented directly:
+/// [`Display`] should be implemented instead, and you get the `ToEnvString`
+/// implementation for free.
+///
+/// [`Display`]: std::fmt::Display
 pub trait ToEnvString {
+    /// Converts the giving value to a `EnvString`.
+    ///
+    /// # Examples
+    ///
+    /// basic usage
+    ///
+    /// ```rust
+    /// # use itconfig::{EnvString, ToEnvString};
+    /// let i = 5;
+    /// let five = EnvString::from("5");
+    /// assert_eq!(five, i.to_env_string());
+    /// ```
     fn to_env_string(&self) -> EnvString;
 }
 
-#[doc(hidden)]
+/// Simple and safe type conversions that may fail in a controlled way under
+/// some circumstances.
+///
+/// This trait automatically implemented for all standard primitives. If you
+/// want to use your custom type in the library you need to implement
+/// `ToEnvString` and `FromEnvString` manually.
 pub trait FromEnvString: Sized {
+    /// The type returned in the event of a conversion error.
     type Err;
 
+    /// Performs the conversion.
     fn from_env_string(s: &EnvString) -> Result<Self, Self::Err>;
 }
 
 impl<T> ToEnvString for T
 where
-    T: ToString,
+    T: std::fmt::Display,
 {
     #[inline]
     fn to_env_string(&self) -> EnvString {
@@ -68,6 +94,7 @@ impl FromEnvString for bool {
     }
 }
 
+#[doc(hidden)]
 #[cfg(feature = "array")]
 #[derive(Debug)]
 pub enum ArrayEnvError {
@@ -90,8 +117,7 @@ where
             .and_then(|vec| {
                 vec.iter()
                     .map(|v| {
-                        v.to_env_string()
-                            .parse::<T>()
+                        FromEnvString::from_env_string(&v.to_env_string())
                             .map_err(|_| ArrayEnvError::FailedToParse)
                     })
                     .collect::<Result<Vec<T>, _>>()
@@ -115,13 +141,20 @@ impl FromEnvString for &'static str {
     }
 }
 
-#[doc(hidden)]
+/// Wrapper under String type.
+///
+/// When we read the environment variable, we automatically convert the value
+/// to EnvString and then convert it to your expected type.
+///
 #[derive(Debug, PartialEq, Clone)]
 pub struct EnvString(String);
 
-impl EnvString {
-    pub fn parse<T: FromEnvString>(&self) -> Result<T, T::Err> {
-        FromEnvString::from_env_string(self)
+impl<T> From<T> for EnvString
+where
+    T: ToEnvString,
+{
+    fn from(val: T) -> Self {
+        val.to_env_string()
     }
 }
 

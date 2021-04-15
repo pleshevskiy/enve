@@ -1,4 +1,5 @@
-use crate::prelude::*;
+use crate::envstr::*;
+use crate::error::*;
 use std::env;
 
 /// This function is similar as `get_env`, but it unwraps result with panic on error.
@@ -123,17 +124,14 @@ where
         .and_then(|env_str| parse_env_variable(env_name, env_str))
 }
 
-#[doc(hidden)]
 fn parse_env_variable<T>(env_name: &str, env_str: EnvString) -> Result<T, EnvError>
 where
     T: FromEnvString,
 {
-    env_str
-        .parse::<T>()
+    FromEnvString::from_env_string(&env_str)
         .map_err(|_| EnvError::FailedToParse(env_name.to_string()))
 }
 
-#[doc(hidden)]
 fn make_panic<T>(e: EnvError) -> T {
     panic!("{}", e)
 }

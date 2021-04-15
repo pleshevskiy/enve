@@ -140,6 +140,7 @@
 #![forbid(unsafe_code)]
 #![deny(
     missing_debug_implementations,
+    missing_docs,
     unstable_features,
     unused_imports,
     unused_qualifications
@@ -149,17 +150,13 @@
 
 /////////////////////////////////////////////////////////////////////////////
 
-pub mod envstr;
+mod envstr;
 mod error;
 mod getenv;
 
+pub use self::envstr::*;
 pub use self::error::*;
 pub use self::getenv::*;
-
-pub mod prelude {
-    pub use crate::envstr::*;
-    pub use crate::error::*;
-}
 
 #[cfg(feature = "macro")]
 extern crate itconfig_macro;
