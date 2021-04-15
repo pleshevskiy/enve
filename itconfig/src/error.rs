@@ -1,9 +1,13 @@
 use std::error;
 use std::fmt;
 
+/// The error type for operations interacting with environment variables
 #[derive(Debug, PartialEq)]
 pub enum EnvError {
+    /// The specified environment variable was not present in the current process's environment.
     MissingVariable(String),
+
+    /// Failed to parse the specified environment variable.
     FailedToParse(String),
 }
 
