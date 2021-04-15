@@ -531,3 +531,29 @@ mod test_case_22 {
         assert_eq!(config::STATIC_CONCAT_VARIABLE(), "static part".to_string())
     }
 }
+
+mod test_case_23 {
+    use std::env;
+
+    itconfig::config! {
+        SOMETHING: Option<&'static str>,
+        #[env_name = "SOMETHING"]
+        STD_SOMETHING: std::option::Option<&'static str>,
+        #[env_name = "SOMETHING"]
+        CORE_SOMETHING: core::option::Option<&'static str>,
+
+        NOTHING: Option<&'static str>,
+    }
+
+    #[test]
+    fn optional_variables() {
+        config::init();
+
+        env::set_var("SOMETHING", "hello world");
+
+        assert_eq!(config::SOMETHING(), Some("hello world"));
+        assert_eq!(config::STD_SOMETHING(), Some("hello world"));
+        assert_eq!(config::CORE_SOMETHING(), Some("hello world"));
+        assert_eq!(config::NOTHING(), None);
+    }
+}

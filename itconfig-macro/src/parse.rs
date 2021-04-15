@@ -117,7 +117,7 @@ impl Parse for RootNamespace {
                 match attr.parse_meta()? {
                     Meta::List(MetaList { nested, .. }) => {
                         let message =
-                            format!("expected #[config(name = \"...\")] or #[config(unwrap)]");
+                            "expected #[config(name = \"...\")] or #[config(unwrap)]".to_string();
                         match nested.first().unwrap() {
                             NestedMeta::Meta(Meta::NameValue(MetaNameValue {
                                 path,
@@ -127,7 +127,7 @@ impl Parse for RootNamespace {
                                 if path.is_ident("name") {
                                     name = Some(Ident::new(&lit_str.value(), Span::call_site()));
                                 } else {
-                                    Err(Error::new_spanned(attr, message))?;
+                                    return Err(Error::new_spanned(attr, message));
                                 }
                             }
                             NestedMeta::Meta(Meta::Path(path)) => {
@@ -135,17 +135,17 @@ impl Parse for RootNamespace {
                                     name = None;
                                     with_module = false;
                                 } else {
-                                    Err(Error::new_spanned(attr, message))?;
+                                    return Err(Error::new_spanned(attr, message));
                                 }
                             }
                             _ => {
-                                Err(Error::new_spanned(attr, message))?;
+                                return Err(Error::new_spanned(attr, message));
                             }
                         }
                     }
                     _ => {
-                        let message = format!("expected #[config(...)]");
-                        Err(Error::new_spanned(attr, message))?;
+                        let message = "expected #[config(...)]".to_string();
+                        return Err(Error::new_spanned(attr, message));
                     }
                 }
             } else {
@@ -166,7 +166,7 @@ impl Parse for RootNamespace {
         let prefix = String::new();
         let namespaces = namespaces
             .into_iter()
-            .map(fill_env_prefix(prefix.clone()))
+            .map(fill_env_prefix(prefix))
             .collect();
 
         Ok(RootNamespace {
@@ -231,7 +231,10 @@ impl Parse for Variable {
                 if content.peek(Ident::peek_any) {
                     let concat_var: Variable = content.parse()?;
                     let name = &concat_var.name;
-                    let env_name = &concat_var.env_name.clone().unwrap_or(name.to_string());
+                    let env_name = &concat_var
+                        .env_name
+                        .clone()
+                        .unwrap_or_else(|| name.to_string());
 
                     let get_variable = if concat_var.initial.is_some() {
                         let initial = concat_var.initial.as_ref().unwrap();
@@ -245,8 +248,10 @@ impl Parse for Variable {
                     let part: Lit = content.parse()?;
                     tmp_vec.push(quote!(#part.to_string()));
                 }
+
                 content.parse::<Comma>().ok();
             }
+
             concat_parts = Some(tmp_vec);
         } else {
             initial = input

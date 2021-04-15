@@ -1,12 +1,15 @@
 #![recursion_limit = "256"]
+#![deny(clippy::all)]
 #![forbid(unsafe_code)]
 
 mod ast;
 mod expand;
 mod parse;
+mod utils;
 
 extern crate proc_macro;
 extern crate proc_macro2;
+
 use self::proc_macro::TokenStream;
 use ast::RootNamespace;
 use quote::ToTokens;

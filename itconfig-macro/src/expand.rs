@@ -1,13 +1,7 @@
 use crate::ast::*;
+use crate::utils::{is_option_type, vec_to_token_stream_2};
 use proc_macro2::TokenStream as TokenStream2;
 use quote::{quote, ToTokens, TokenStreamExt};
-
-fn vec_to_token_stream_2<T>(input: &Vec<T>) -> Vec<TokenStream2>
-where
-    T: ToTokens,
-{
-    input.iter().map(|ns| ns.into_token_stream()).collect()
-}
 
 impl ToTokens for RootNamespace {
     fn to_tokens(&self, tokens: &mut TokenStream2) {
@@ -131,7 +125,7 @@ impl ToTokens for Variable {
         let env_name = &self
             .env_name
             .clone()
-            .unwrap_or(name.to_string().to_uppercase());
+            .unwrap_or_else(|| name.to_string().to_uppercase());
         let meta = vec_to_token_stream_2(&self.meta);
 
         let get_variable: TokenStream2 = if self.concat_parts.is_some() {
@@ -145,6 +139,8 @@ impl ToTokens for Variable {
         } else if self.initial.is_some() {
             let initial = self.initial.as_ref().unwrap();
             quote!(::itconfig::get_env_or_set_default(#env_name, #initial))
+        } else if is_option_type(&self.ty) {
+            quote!(::itconfig::maybe_get_env(#env_name))
         } else {
             quote!(::itconfig::get_env_or_panic(#env_name))
         };
