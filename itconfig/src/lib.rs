@@ -32,62 +32,58 @@
 //! ```
 //!
 //!
-//! ## Example usage
+//! ## Basic usage
 //!
 //! ```rust
 //! use itconfig::config;
 //! use std::env;
-//! // use dotenv::dotenv;
+//! //use dotenv::dotenv;
 //!
 //! config! {
-//!     DEBUG: bool => true,
+//!     DEBUG: bool => false,
+//!
+//!     #[env_name = "APP_HOST"]
 //!     HOST: String => "127.0.0.1",
 //!
-//!     DATABASE_URL < (
-//!         "postgres://",
-//!         POSTGRES_USERNAME => "user",
-//!         ":",
-//!         POSTGRES_PASSWORD => "pass",
-//!         "@",
-//!         POSTGRES_HOST => "localhost:5432",
-//!         "/",
-//!         POSTGRES_DB => "test",
-//!     ),
+//!     database {
+//!         URL < (
+//!             "postgres://",
+//!             POSTGRES_USERNAME => "user",
+//!             ":",
+//!             POSTGRES_PASSWORD => "pass",
+//!             "@",
+//!             POSTGRES_HOST => "localhost:5432",
+//!             "/",
+//!             POSTGRES_DB => "test",
+//!         ),
 //!
-//!     APP {
-//!         static BASE_URL => "/api", // &'static str by default
+//!         pool {
+//!             MAX_SIZE: usize => 15,
+//!         },
+//!     },
 //!
-//!         ARTICLE {
-//!             static PER_PAGE: u32 => 15,
-//!         }
+//!     sentry {
+//!         DSN: Option<&'static str>,
+//!     },
 //!
-//!         #[cfg(feature = "companies")]
-//!         COMPANY {
-//!             #[env_name = "INSTITUTIONS_PER_PAGE"]
-//!             static PER_PAGE: u32 => 15,
-//!         }
-//!     }
+//!     feature {
+//!         static CORS: bool => false,
 //!
-//!     FEATURE {
-//!         NEW_MENU: bool => false,
-//!
-//!         COMPANY {
-//!             PROFILE: bool => false,
-//!         }
-//!     }
+//!         static GRAPHQL_PLAYGROUND: bool => false,
+//!     },
 //! }
 //!
 //! fn main () {
 //!     // dotenv().expect("dotenv setup to be successful");
 //!     // or
-//!     env::set_var("FEATURE_NEW_MENU", "t");
+//!     env::set_var("FEATURE_CORS", "true");
 //!
 //!     config::init();
 //!     assert_eq!(config::HOST(), String::from("127.0.0.1"));
-//!     assert_eq!(config::DATABASE_URL(), String::from("postgres://user:pass@localhost:5432/test"));
-//!     assert_eq!(config::APP::BASE_URL(), "/api");
-//!     assert_eq!(config::APP::ARTICLE::PER_PAGE(), 15);
-//!     assert_eq!(config::FEATURE::NEW_MENU(), true);
+//!     assert_eq!(config::database::URL(), String::from("postgres://user:pass@localhost:5432/test"));
+//!     assert_eq!(config::database::pool::MAX_SIZE(), 15);
+//!     assert_eq!(config::sentry::DSN(), None);
+//!     assert_eq!(config::feature::CORS(), true);
 //! }
 //! ```
 //!
