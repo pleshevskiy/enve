@@ -145,6 +145,7 @@
     unused_imports,
     unused_qualifications
 )]
+// Clippy lints
 #![deny(clippy::all)]
 #![allow(clippy::needless_doctest_main)]
 
