@@ -3,6 +3,13 @@ use quote::ToTokens;
 use syn::{Path, Type};
 
 const OPTION_PATH_IDENTS: &[&str] = &["Option|", "std|option|Option|", "core|option|Option|"];
+const VEC_PATH_IDENTS: &[&str] = &["Vec|", "std|vec|Vec|"];
+
+#[derive(Debug)]
+pub enum SupportedBox {
+    Vec,
+    Option,
+}
 
 pub fn vec_to_token_stream_2<T>(input: &[T]) -> Vec<TokenStream2>
 where
@@ -22,15 +29,26 @@ fn path_ident(path: &Path) -> String {
         })
 }
 
-fn is_option_path_ident(path_ident: String) -> bool {
+fn is_option_path_ident(path_ident: &str) -> bool {
     OPTION_PATH_IDENTS.iter().any(|s| path_ident == *s)
 }
 
-pub fn is_option_type(ty: &Type) -> bool {
+fn is_vec_path_ident(path_ident: &str) -> bool {
+    VEC_PATH_IDENTS.iter().any(|s| path_ident == *s)
+}
+
+pub fn maybe_supported_box(ty: &Type) -> Option<SupportedBox> {
     match ty {
-        Type::Path(ty_path) => {
-            ty_path.qself.is_none() && is_option_path_ident(path_ident(&ty_path.path))
+        Type::Path(ty_path) if ty_path.qself.is_none() => {
+            let path_ident = path_ident(&ty_path.path);
+            if is_option_path_ident(&path_ident) {
+                Some(SupportedBox::Option)
+            } else if is_vec_path_ident(&path_ident) {
+                Some(SupportedBox::Vec)
+            } else {
+                None
+            }
         }
-        _ => false,
+        _ => None,
     }
 }

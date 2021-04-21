@@ -5,7 +5,7 @@ use std::ops::Deref;
 /// When we read the environment variable, we automatically convert the value
 /// to EnvString and then convert it to your expected type.
 ///
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, Default, PartialEq, Eq, Clone)]
 pub struct EnvString(String);
 
 impl<T> From<T> for EnvString

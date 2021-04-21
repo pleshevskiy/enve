@@ -547,13 +547,29 @@ mod test_case_23 {
 
     #[test]
     fn optional_variables() {
-        config::init();
-
         env::set_var("SOMETHING", "hello world");
 
         assert_eq!(config::SOMETHING(), Some("hello world"));
         assert_eq!(config::STD_SOMETHING(), Some("hello world"));
         assert_eq!(config::CORE_SOMETHING(), Some("hello world"));
         assert_eq!(config::NOTHING(), None);
+    }
+}
+
+mod test_case_24 {
+    use std::env;
+
+    itconfig::config! {
+        MY_VEC: Vec<&'static str>,
+        #[env_name = "MY_VEC"]
+        STD_VEC: std::vec::Vec<&'static str>,
+    }
+
+    #[test]
+    fn vector_of_values() {
+        env::set_var("MY_VEC", "paypal,stripe");
+
+        assert_eq!(config::MY_VEC(), vec!["paypal", "stripe"]);
+        assert_eq!(config::STD_VEC(), vec!["paypal", "stripe"]);
     }
 }

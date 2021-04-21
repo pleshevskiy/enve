@@ -149,11 +149,14 @@
 
 mod envstr;
 mod error;
-mod getenv;
+mod get_env;
+mod get_vec_env;
+pub(crate) mod utils;
 
 pub use self::envstr::*;
 pub use self::error::*;
-pub use self::getenv::*;
+pub use self::get_env::*;
+pub use self::get_vec_env::*;
 
 #[cfg(feature = "macro")]
 extern crate itconfig_macro;

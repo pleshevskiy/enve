@@ -1,5 +1,5 @@
 use crate::ast::*;
-use crate::utils::{is_option_type, vec_to_token_stream_2};
+use crate::utils::{maybe_supported_box, vec_to_token_stream_2, SupportedBox};
 use proc_macro2::TokenStream as TokenStream2;
 use quote::{quote, ToTokens, TokenStreamExt};
 
@@ -128,6 +128,8 @@ impl ToTokens for Variable {
             .unwrap_or_else(|| name.to_string().to_uppercase());
         let meta = vec_to_token_stream_2(&self.meta);
 
+        let supported_box = maybe_supported_box(&ty);
+
         let get_variable: TokenStream2 = if self.concat_parts.is_some() {
             let concat_parts = self.concat_parts.as_ref().unwrap();
             quote! {{
@@ -136,13 +138,25 @@ impl ToTokens for Variable {
                 ::std::env::set_var(#env_name, value.as_str());
                 value
             }}
-        } else if self.initial.is_some() {
-            let initial = self.initial.as_ref().unwrap();
-            quote!(::itconfig::get_env_or_set_default(#env_name, #initial))
-        } else if is_option_type(&self.ty) {
-            quote!(::itconfig::maybe_get_env(#env_name))
+        } else if let Some(initial) = &self.initial {
+            match supported_box {
+                Some(SupportedBox::Vec) => {
+                    quote!(::itconfig::get_vec_env_or_set_default(#env_name, ",", #initial))
+                }
+                _ => quote!(::itconfig::get_env_or_set_default(#env_name, #initial)),
+            }
         } else {
-            quote!(::itconfig::get_env_or_panic(#env_name))
+            match supported_box {
+                Some(SupportedBox::Option) => {
+                    quote!(::itconfig::maybe_get_env(#env_name))
+                }
+                Some(SupportedBox::Vec) => {
+                    quote!(::itconfig::get_vec_env_or_panic(#env_name, ","))
+                }
+                _ => {
+                    quote!(::itconfig::get_env_or_panic(#env_name))
+                }
+            }
         };
 
         if self.is_static {
