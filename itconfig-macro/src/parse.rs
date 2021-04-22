@@ -1,4 +1,5 @@
 use crate::ast::*;
+use crate::utils::{maybe_supported_box, SupportedBox};
 use proc_macro2::{Ident, Span, TokenStream as TokenStream2};
 use quote::quote;
 use syn::ext::IdentExt;
@@ -73,7 +74,13 @@ fn parse_namespace_content(
             if attr.path.is_ident("env_name") {
                 variable.env_name = parse_attribute(attr, "env_name", &variable.env_name)?;
             } else {
-                variable.meta.push(attr);
+                match variable.supported_box {
+                    Some(SupportedBox::Vec { sep: current_sep }) if attr.path.is_ident("sep") => {
+                        let sep = parse_attribute(attr, "sep", &current_sep)?;
+                        variable.supported_box = Some(SupportedBox::Vec { sep });
+                    }
+                    _ => variable.meta.push(attr),
+                }
             }
         }
 
@@ -220,6 +227,8 @@ impl Parse for Variable {
             parse_str("&'static str")?
         };
 
+        let supported_box = maybe_supported_box(&ty);
+
         if is_concat {
             input.parse::<Lt>()?;
 
@@ -263,6 +272,7 @@ impl Parse for Variable {
         input.parse::<Comma>().ok();
 
         Ok(Variable {
+            supported_box,
             is_static,
             name,
             ty,

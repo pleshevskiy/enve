@@ -1,5 +1,5 @@
 use crate::ast::*;
-use crate::utils::{maybe_supported_box, vec_to_token_stream_2, SupportedBox};
+use crate::utils::{vec_to_token_stream_2, SupportedBox};
 use proc_macro2::TokenStream as TokenStream2;
 use quote::{quote, ToTokens, TokenStreamExt};
 
@@ -128,8 +128,6 @@ impl ToTokens for Variable {
             .unwrap_or_else(|| name.to_string().to_uppercase());
         let meta = vec_to_token_stream_2(&self.meta);
 
-        let supported_box = maybe_supported_box(&ty);
-
         let get_variable: TokenStream2 = if self.concat_parts.is_some() {
             let concat_parts = self.concat_parts.as_ref().unwrap();
             quote! {{
@@ -139,19 +137,21 @@ impl ToTokens for Variable {
                 value
             }}
         } else if let Some(initial) = &self.initial {
-            match supported_box {
-                Some(SupportedBox::Vec) => {
-                    quote!(::itconfig::get_vec_env_or_set_default(#env_name, ",", #initial))
+            match self.supported_box.clone() {
+                Some(SupportedBox::Vec { sep }) => {
+                    let sep = &sep.unwrap_or_else(|| String::from(","));
+                    quote!(::itconfig::get_vec_env_or_set_default(#env_name, #sep, #initial))
                 }
                 _ => quote!(::itconfig::get_env_or_set_default(#env_name, #initial)),
             }
         } else {
-            match supported_box {
+            match self.supported_box.clone() {
                 Some(SupportedBox::Option) => {
                     quote!(::itconfig::maybe_get_env(#env_name))
                 }
-                Some(SupportedBox::Vec) => {
-                    quote!(::itconfig::get_vec_env_or_panic(#env_name, ","))
+                Some(SupportedBox::Vec { sep }) => {
+                    let sep = &sep.unwrap_or_else(|| String::from(","));
+                    quote!(::itconfig::get_vec_env_or_panic(#env_name, #sep))
                 }
                 _ => {
                     quote!(::itconfig::get_env_or_panic(#env_name))

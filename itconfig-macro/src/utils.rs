@@ -5,9 +5,9 @@ use syn::{Path, Type};
 const OPTION_PATH_IDENTS: &[&str] = &["Option|", "std|option|Option|", "core|option|Option|"];
 const VEC_PATH_IDENTS: &[&str] = &["Vec|", "std|vec|Vec|"];
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum SupportedBox {
-    Vec,
+    Vec { sep: Option<String> },
     Option,
 }
 
@@ -44,7 +44,7 @@ pub fn maybe_supported_box(ty: &Type) -> Option<SupportedBox> {
             if is_option_path_ident(&path_ident) {
                 Some(SupportedBox::Option)
             } else if is_vec_path_ident(&path_ident) {
-                Some(SupportedBox::Vec)
+                Some(SupportedBox::Vec { sep: None })
             } else {
                 None
             }

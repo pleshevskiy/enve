@@ -86,7 +86,7 @@ where
 /// }
 /// ```
 ///
-pub fn get_vec_env<T>(env_name: &str, sep: &'static str) -> Result<Vec<T>, EnvError>
+pub fn get_vec_env<T>(env_name: &str, sep: &str) -> Result<Vec<T>, EnvError>
 where
     T: FromEnvString,
 {
@@ -116,15 +116,12 @@ where
 /// }
 /// ```
 ///
-pub fn get_vec_env_or_default<T, D>(env_name: &str, sep: &'static str, default: Vec<D>) -> Vec<T>
+pub fn get_vec_env_or_default<T, D>(env_name: &str, sep: &str, default: Vec<D>) -> Vec<T>
 where
     T: FromEnvString,
     D: ToEnvString,
 {
-    get_vec_env_or(env_name, sep, |_| {
-        Ok(default.into_iter().map(EnvString::from).collect())
-    })
-    .unwrap_or_else(make_panic)
+    get_vec_env_or(env_name, sep, |_| Ok(vec_to_env_strings(default))).unwrap_or_else(make_panic)
 }
 
 /// This function is similar as `get_vec_env_or_default`, but the default value will be set to environment
@@ -151,29 +148,14 @@ where
 /// }
 /// ```
 ///
-pub fn get_vec_env_or_set_default<T, D>(
-    env_name: &str,
-    sep: &'static str,
-    default: Vec<D>,
-) -> Vec<T>
+pub fn get_vec_env_or_set_default<T, D>(env_name: &str, sep: &str, default: Vec<D>) -> Vec<T>
 where
     T: FromEnvString,
     D: ToEnvString,
 {
     get_vec_env_or(env_name, sep, |_| {
-        let default_env_strings: Vec<EnvString> =
-            default.into_iter().map(EnvString::from).collect();
-        let env_val =
-            default_env_strings
-                .iter()
-                .enumerate()
-                .fold(String::new(), |mut res, (i, item)| {
-                    if i > 0 {
-                        res.push_str(sep);
-                    }
-                    res.push_str(&item);
-                    res
-                });
+        let default_env_strings = vec_to_env_strings(default);
+        let env_val = join(&default_env_strings, sep);
         env::set_var(env_name, env_val.as_str());
         Ok(default_env_strings)
     })
@@ -182,7 +164,7 @@ where
 
 /// This function returns env variable as `EnvString` structure. You can pass callback for custom
 /// default expression. Callback should return `EnvString` value or `EnvError`
-pub fn get_vec_env_or<T, F>(env_name: &str, sep: &'static str, cb: F) -> Result<Vec<T>, EnvError>
+pub fn get_vec_env_or<T, F>(env_name: &str, sep: &str, cb: F) -> Result<Vec<T>, EnvError>
 where
     T: FromEnvString,
     F: FnOnce(env::VarError) -> Result<Vec<EnvString>, EnvError>,

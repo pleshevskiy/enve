@@ -506,6 +506,7 @@ mod test_case_22 {
             "static ",
             STATIC_CONCAT_PART => "part",
         ),
+        static STATIC_VEC: Vec<u32> => vec![1],
     }
 
     #[test]
@@ -528,7 +529,8 @@ mod test_case_22 {
         assert_eq!(config::STATIC_USIZE(), 1);
         assert_eq!(config::STATIC_F32(), 1.0);
         assert_eq!(config::STATIC_F64(), 1.0);
-        assert_eq!(config::STATIC_CONCAT_VARIABLE(), "static part".to_string())
+        assert_eq!(config::STATIC_CONCAT_VARIABLE(), "static part".to_string());
+        assert_eq!(config::STATIC_VEC(), vec![1]);
     }
 }
 
@@ -571,5 +573,26 @@ mod test_case_24 {
 
         assert_eq!(config::MY_VEC(), vec!["paypal", "stripe"]);
         assert_eq!(config::STD_VEC(), vec!["paypal", "stripe"]);
+    }
+}
+
+mod test_case_25 {
+    use std::env;
+
+    itconfig::config! {
+        #[sep = ";"]
+        CUSTOM_SEP_MY_VEC: Vec<&'static str>,
+
+        #[env_name = "CUSTOM_SEP_MY_VEC"]
+        #[sep = ";"]
+        CUSTOM_SEP_STD_VEC: std::vec::Vec<&'static str>,
+    }
+
+    #[test]
+    fn custom_separator_for_vector() {
+        env::set_var("CUSTOM_SEP_MY_VEC", "paypal;stripe");
+
+        assert_eq!(config::CUSTOM_SEP_MY_VEC(), vec!["paypal", "stripe"]);
+        assert_eq!(config::CUSTOM_SEP_STD_VEC(), vec!["paypal", "stripe"]);
     }
 }
