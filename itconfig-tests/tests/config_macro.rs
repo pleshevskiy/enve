@@ -506,6 +506,7 @@ mod test_case_22 {
             "static ",
             STATIC_CONCAT_PART => "part",
         ),
+        static STATIC_VEC: Vec<u32> => vec![1],
     }
 
     #[test]
@@ -528,7 +529,8 @@ mod test_case_22 {
         assert_eq!(config::STATIC_USIZE(), 1);
         assert_eq!(config::STATIC_F32(), 1.0);
         assert_eq!(config::STATIC_F64(), 1.0);
-        assert_eq!(config::STATIC_CONCAT_VARIABLE(), "static part".to_string())
+        assert_eq!(config::STATIC_CONCAT_VARIABLE(), "static part".to_string());
+        assert_eq!(config::STATIC_VEC(), vec![1]);
     }
 }
 
@@ -547,13 +549,65 @@ mod test_case_23 {
 
     #[test]
     fn optional_variables() {
-        config::init();
-
         env::set_var("SOMETHING", "hello world");
 
         assert_eq!(config::SOMETHING(), Some("hello world"));
         assert_eq!(config::STD_SOMETHING(), Some("hello world"));
         assert_eq!(config::CORE_SOMETHING(), Some("hello world"));
         assert_eq!(config::NOTHING(), None);
+    }
+}
+
+mod test_case_24 {
+    use std::env;
+
+    itconfig::config! {
+        MY_VEC: Vec<&'static str>,
+        #[env_name = "MY_VEC"]
+        STD_VEC: std::vec::Vec<&'static str>,
+    }
+
+    #[test]
+    fn vector_of_values() {
+        env::set_var("MY_VEC", "paypal,stripe");
+
+        assert_eq!(config::MY_VEC(), vec!["paypal", "stripe"]);
+        assert_eq!(config::STD_VEC(), vec!["paypal", "stripe"]);
+    }
+}
+
+mod test_case_25 {
+    use std::env;
+
+    itconfig::config! {
+        #[sep = ";"]
+        CUSTOM_SEP_MY_VEC: Vec<&'static str>,
+
+        #[env_name = "CUSTOM_SEP_MY_VEC"]
+        #[sep = ";"]
+        CUSTOM_SEP_STD_VEC: std::vec::Vec<&'static str>,
+    }
+
+    #[test]
+    fn custom_separator_for_vector() {
+        env::set_var("CUSTOM_SEP_MY_VEC", "paypal;stripe");
+
+        assert_eq!(config::CUSTOM_SEP_MY_VEC(), vec!["paypal", "stripe"]);
+        assert_eq!(config::CUSTOM_SEP_STD_VEC(), vec!["paypal", "stripe"]);
+    }
+}
+
+mod test_case_26 {
+    use std::env;
+
+    itconfig::config! {
+        OPTION_VEC: Option<Vec<&'static str>>,
+    }
+
+    #[test]
+    fn optional_vec() {
+        env::set_var("OPTION_VEC", "paypal,stripe");
+
+        assert_eq!(config::OPTION_VEC(), Some(vec!["paypal", "stripe"]));
     }
 }

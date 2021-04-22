@@ -1,5 +1,6 @@
 use crate::envstr::*;
 use crate::error::*;
+use crate::utils::*;
 use std::env;
 
 /// Same as get_env but returns Option enum instead Result
@@ -150,18 +151,6 @@ where
         .map(|s| s.to_env_string())
         .or_else(cb)
         .and_then(|env_str| parse_env_variable(env_name, env_str))
-}
-
-fn parse_env_variable<T>(env_name: &str, env_str: EnvString) -> Result<T, EnvError>
-where
-    T: FromEnvString,
-{
-    FromEnvString::from_env_string(&env_str)
-        .map_err(|_| EnvError::FailedToParse(env_name.to_string()))
-}
-
-fn make_panic<T>(e: EnvError) -> T {
-    panic!("{}", e)
 }
 
 #[cfg(test)]
