@@ -596,3 +596,18 @@ mod test_case_25 {
         assert_eq!(config::CUSTOM_SEP_STD_VEC(), vec!["paypal", "stripe"]);
     }
 }
+
+mod test_case_26 {
+    use std::env;
+
+    itconfig::config! {
+        OPTION_VEC: Option<Vec<&'static str>>,
+    }
+
+    #[test]
+    fn optional_vec() {
+        env::set_var("OPTION_VEC", "paypal,stripe");
+
+        assert_eq!(config::OPTION_VEC(), Some(vec!["paypal", "stripe"]));
+    }
+}

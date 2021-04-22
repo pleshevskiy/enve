@@ -75,9 +75,9 @@ fn parse_namespace_content(
                 variable.env_name = parse_attribute(attr, "env_name", &variable.env_name)?;
             } else {
                 match variable.supported_box {
-                    Some(SupportedBox::Vec { sep: current_sep }) if attr.path.is_ident("sep") => {
+                    Some(SupportedBox::Vec(current_sep)) if attr.path.is_ident("sep") => {
                         let sep = parse_attribute(attr, "sep", &current_sep)?;
-                        variable.supported_box = Some(SupportedBox::Vec { sep });
+                        variable.supported_box = Some(SupportedBox::Vec(sep));
                     }
                     _ => variable.meta.push(attr),
                 }
