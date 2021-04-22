@@ -1,5 +1,5 @@
 use crate::ast::*;
-use crate::utils::{maybe_supported_box, SupportedBox};
+use crate::utils::{maybe_supported_box, SupportedBox, VecBoxParams};
 use proc_macro2::{Ident, Span, TokenStream as TokenStream2};
 use quote::quote;
 use syn::ext::IdentExt;
@@ -60,7 +60,8 @@ fn parse_namespace_content(
 
         for attr in attributes {
             if attr.path.is_ident("env_prefix") {
-                namespace.env_prefix = parse_attribute(attr, "env_prefix", &namespace.env_prefix)?;
+                let env_prefix = parse_attribute(attr, "env_prefix", &namespace.env_prefix)?;
+                namespace.env_prefix = Some(env_prefix);
             } else {
                 namespace.meta.push(attr);
             }
@@ -72,12 +73,14 @@ fn parse_namespace_content(
 
         for attr in attributes {
             if attr.path.is_ident("env_name") {
-                variable.env_name = parse_attribute(attr, "env_name", &variable.env_name)?;
+                let env_name = parse_attribute(attr, "env_name", &variable.env_name)?;
+                variable.env_name = Some(env_name);
             } else {
                 match variable.supported_box {
-                    Some(SupportedBox::Vec(current_sep)) if attr.path.is_ident("sep") => {
-                        let sep = parse_attribute(attr, "sep", &current_sep)?;
-                        variable.supported_box = Some(SupportedBox::Vec(sep));
+                    Some(SupportedBox::Vec(params)) if attr.path.is_ident("sep") => {
+                        let sep = parse_attribute(attr, "sep", &params.sep_opt())?;
+                        variable.supported_box =
+                            Some(SupportedBox::Vec(VecBoxParams::new(Some(sep))));
                     }
                     _ => variable.meta.push(attr),
                 }
@@ -90,11 +93,7 @@ fn parse_namespace_content(
     Ok(())
 }
 
-fn parse_attribute(
-    attr: Attribute,
-    name: &'static str,
-    var: &Option<String>,
-) -> Result<Option<String>> {
+fn parse_attribute(attr: Attribute, name: &'static str, var: &Option<String>) -> Result<String> {
     if var.is_some() {
         let message = format!("You cannot use {} meta twice", &name);
         return Err(Error::new_spanned(attr, message));
@@ -104,7 +103,7 @@ fn parse_attribute(
         Meta::NameValue(MetaNameValue {
             lit: Lit::Str(lit_str),
             ..
-        }) => Ok(Some(lit_str.value())),
+        }) => Ok(lit_str.value()),
         _ => {
             let message = format!("expected #[{} = \"...\"]", &name);
             Err(Error::new_spanned(attr, message))

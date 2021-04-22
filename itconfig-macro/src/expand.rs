@@ -138,8 +138,8 @@ impl ToTokens for Variable {
             }}
         } else if let Some(initial) = &self.initial {
             match self.supported_box.clone() {
-                Some(SupportedBox::Vec(sep)) => {
-                    let sep = &sep.unwrap_or_else(|| String::from(","));
+                Some(SupportedBox::Vec(params)) => {
+                    let sep = &params.sep();
                     quote!(::itconfig::get_vec_env_or_set_default(#env_name, #sep, #initial))
                 }
                 _ => quote!(::itconfig::get_env_or_set_default(#env_name, #initial)),
@@ -149,12 +149,12 @@ impl ToTokens for Variable {
                 Some(SupportedBox::Option) => {
                     quote!(::itconfig::maybe_get_env(#env_name))
                 }
-                Some(SupportedBox::OptionVec(sep)) => {
-                    let sep = &sep.unwrap_or_else(|| String::from(","));
+                Some(SupportedBox::OptionVec(params)) => {
+                    let sep = &params.sep();
                     quote!(::itconfig::maybe_get_vec_env(#env_name, #sep))
                 }
-                Some(SupportedBox::Vec(sep)) => {
-                    let sep = &sep.unwrap_or_else(|| String::from(","));
+                Some(SupportedBox::Vec(params)) => {
+                    let sep = &params.sep();
                     quote!(::itconfig::get_vec_env_or_panic(#env_name, #sep))
                 }
                 None => {
