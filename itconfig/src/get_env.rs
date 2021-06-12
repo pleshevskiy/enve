@@ -196,7 +196,7 @@ mod tests {
     #[test]
     fn get_missing_env_with_default_value() {
         let flag: bool = get_env_or_default("TEST_CASE_6", "true");
-        assert_eq!(flag, true);
+        assert!(flag);
     }
 
     #[test]
@@ -222,7 +222,7 @@ mod tests {
     #[test]
     fn get_missing_env_with_set_default_value() {
         let flag: bool = get_env_or_set_default("TEST_CASE_10", "true");
-        assert_eq!(flag, true);
+        assert!(flag);
 
         let env_var = env::var("TEST_CASE_10");
         assert_eq!(env_var, Ok(String::from("true")))
