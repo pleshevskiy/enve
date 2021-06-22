@@ -134,6 +134,7 @@
 
 // Rustc lints.
 #![forbid(unsafe_code)]
+#![forbid(non_ascii_idents)]
 #![deny(
     missing_debug_implementations,
     missing_docs,

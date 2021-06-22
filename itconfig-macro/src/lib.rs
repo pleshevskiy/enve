@@ -1,6 +1,7 @@
 #![recursion_limit = "256"]
 #![deny(clippy::all)]
 #![forbid(unsafe_code)]
+#![forbid(non_ascii_idents)]
 
 mod ast;
 mod expand;
