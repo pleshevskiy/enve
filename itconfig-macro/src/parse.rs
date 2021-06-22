@@ -166,7 +166,7 @@ impl Parse for RootNamespace {
         let mut variables: Vec<Variable> = vec![];
         let mut namespaces: Vec<Namespace> = vec![];
         while !input.is_empty() {
-            parse_namespace_content(&input, &mut variables, &mut namespaces)?;
+            parse_namespace_content(input, &mut variables, &mut namespaces)?;
         }
 
         let prefix = String::new();

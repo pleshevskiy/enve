@@ -20,7 +20,7 @@ pub(crate) fn join(env_strings: &[EnvString], sep: &str) -> String {
             if i > 0 {
                 res.push_str(sep);
             }
-            res.push_str(&item);
+            res.push_str(item);
             res
         })
 }
