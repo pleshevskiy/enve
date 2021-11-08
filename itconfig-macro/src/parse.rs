@@ -14,7 +14,7 @@ fn fill_env_prefix(prefix: String) -> Box<dyn Fn(Namespace) -> Namespace> {
     Box::new(move |mut ns| {
         let env_prefix = match &ns.env_prefix {
             None => {
-                let env_prefix = format!("{}{}_", prefix, ns.name.clone().to_string());
+                let env_prefix = format!("{}{}_", prefix, ns.name.clone());
                 ns.env_prefix = Some(env_prefix.clone());
                 env_prefix
             }
