@@ -1,4 +1,4 @@
-use bytes::buf::BufExt;
+use bytes::Buf;
 use futures_util::{stream, StreamExt};
 use hyper::client::HttpConnector;
 use hyper::service::{make_service_fn, service_fn};
@@ -6,10 +6,10 @@ use hyper::{header, Body, Client, Method, Request, Response, Server, StatusCode}
 use itconfig::config;
 
 config! {
-    HYPER {
+    hyper {
         PREFER_SCHEMA: String => "http",
 
-        HOST < (
+        static HOST < (
             ADDR => "127.0.0.1",
             ":",
             PORT => 8000,
@@ -25,19 +25,21 @@ config! {
 }
 
 type GenericError = Box<dyn std::error::Error + Send + Sync>;
-type HyperResult<T> = std::result::Result<T, GenericError>;
+type Result<T> = std::result::Result<T, GenericError>;
 
-const INDEX: &'static [u8] = b"<a href=\"test.html\">test.html</a>";
-const INTERNAL_SERVER_ERROR: &'static [u8] = b"Internal Server Error";
-const NOTFOUND: &'static [u8] = b"Not Found";
-const POST_DATA: &'static str = r#"{"original": "data"}"#;
+static INDEX: &[u8] = b"<a href=\"test.html\">test.html</a>";
+static INTERNAL_SERVER_ERROR: &[u8] = b"Internal Server Error";
+static NOT_FOUND: &[u8] = b"Not Found";
+static POST_DATA: &str = r#"{"original": "data"}"#;
 
-async fn client_request_response(client: &Client<HttpConnector>) -> HyperResult<Response<Body>> {
+async fn client_request_response(client: &Client<HttpConnector>) -> Result<Response<Body>> {
+    let url = format!("{}/json_api", config::hyper::HOST());
+
     let req = Request::builder()
         .method(Method::POST)
-        .uri(config::HYPER::JSON_API_URL())
+        .uri(url)
         .header(header::CONTENT_TYPE, "application/json")
-        .body(Body::from(POST_DATA))
+        .body(POST_DATA.into())
         .unwrap();
 
     let web_res = client.request(req).await?;
@@ -55,7 +57,7 @@ async fn client_request_response(client: &Client<HttpConnector>) -> HyperResult<
     Ok(Response::new(body))
 }
 
-async fn api_post_response(req: Request<Body>) -> HyperResult<Response<Body>> {
+async fn api_post_response(req: Request<Body>) -> Result<Response<Body>> {
     // Aggregate the body...
     let whole_body = hyper::body::aggregate(req).await?;
     // Decode as JSON...
@@ -71,7 +73,7 @@ async fn api_post_response(req: Request<Body>) -> HyperResult<Response<Body>> {
     Ok(response)
 }
 
-async fn api_get_response() -> HyperResult<Response<Body>> {
+async fn api_get_response() -> Result<Response<Body>> {
     let data = vec!["foo", "bar"];
     let res = match serde_json::to_string(&data) {
         Ok(json) => Response::builder()
@@ -89,7 +91,7 @@ async fn api_get_response() -> HyperResult<Response<Body>> {
 async fn response_examples(
     req: Request<Body>,
     client: Client<HttpConnector>,
-) -> HyperResult<Response<Body>> {
+) -> Result<Response<Body>> {
     match (req.method(), req.uri().path()) {
         (&Method::GET, "/") | (&Method::GET, "/index.html") => Ok(Response::new(INDEX.into())),
         (&Method::GET, "/test.html") => client_request_response(&client).await,
@@ -99,18 +101,18 @@ async fn response_examples(
             // Return 404 not found response.
             Ok(Response::builder()
                 .status(StatusCode::NOT_FOUND)
-                .body(Body::from(NOTFOUND))
+                .body(NOT_FOUND.into())
                 .unwrap())
         }
     }
 }
 
 #[tokio::main]
-async fn main() -> HyperResult<()> {
+async fn main() -> Result<()> {
     config::init();
     pretty_env_logger::init();
 
-    let addr = config::HYPER::HOST().parse().unwrap();
+    let addr = config::hyper::HOST().parse().unwrap();
 
     // Share a `Client` with all `Service`s
     let client = Client::new();
