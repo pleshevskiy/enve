@@ -23,7 +23,7 @@ fn main() {
 
     println!("Displaying {} posts", posts.len());
     for post in posts {
-        print!("\n");
+        println!();
         println!("{}", post.title);
         println!("----------");
         println!("{}", post.body);
