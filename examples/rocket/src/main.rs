@@ -3,10 +3,8 @@
 #[macro_use]
 extern crate rocket;
 
-use itconfig::config;
-
-config! {
-    ROCKET {
+itconfig::config! {
+    rocket {
         HOST: String => "localhost",
         PORT: u16 => 9000,
         BASE_URL => "/",
@@ -14,14 +12,13 @@ config! {
 }
 
 #[get("/")]
-fn index() -> &'static str {
+fn hello() -> &'static str {
     "Hello, world!"
 }
 
-fn main() {
+#[launch]
+fn rocket() -> _ {
     config::init();
 
-    rocket::ignite()
-        .mount(config::ROCKET::BASE_URL(), routes![index])
-        .launch();
+    rocket::build().mount(config::rocket::BASE_URL(), routes![hello])
 }
