@@ -1,6 +1,6 @@
 # itconfig
 
-[![Build Status](https://travis-ci.org/icetemple/itconfig-rs.svg?branch=main)](https://travis-ci.org/icetemple/itconfig-rs)
+[![CI](https://github.com/icetemple/itconfig-rs/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/icetemple/itconfig-rs/actions/workflows/ci.yml)
 [![unsafe forbidden](https://img.shields.io/badge/unsafe-forbidden-success.svg)](https://github.com/rust-secure-code/safety-dance/)
 [![Documentation](https://docs.rs/itconfig/badge.svg)](https://docs.rs/itconfig)
 [![Crates.io](https://img.shields.io/crates/v/itconfig)](https://crates.io/crates/itconfig)
