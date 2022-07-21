@@ -61,8 +61,6 @@ tokio = { version = "1.2.0", features = ["macros", "rt-multi-thread"] }
 bytes = "1.0.1"
 futures-util = { version = "0.3.13", default-features = false }
 pretty_env_logger = "0.4.0"
-dotenv = "0.15.0"
-diesel = { version = "1.4.8", features = ["postgres"] }
 
 [badges]
 maintenance = { status = "passively-maintained" }
@@ -70,11 +68,6 @@ maintenance = { status = "passively-maintained" }
 # https://docs.rs/about
 [package.metadata.docs.rs]
 all-features = true
-
-[[example]]
-name = "diesel"
-path = "../examples/diesel/main.rs"
-required-features = ["macro"]
 
 [[example]]
 name = "hyper"
