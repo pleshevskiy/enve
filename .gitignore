@@ -1,11 +1,4 @@
-.idea/
-.vscode/
 .DS_Store
 
 /target
-/itconfig-tests/target
 
-Cargo.lock
-
-itconfig/src/main.rs
-/.env*
