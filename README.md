@@ -21,7 +21,7 @@ of it I decided to create my own library.
 
 ## Installation
 
-These macros require a Rust compiler version 1.31 or newer.
+The MSRV is 1.39.0
 
 Add `itconfig = { version = "1.0", features = ["macro"] }` as a dependency in
 `Cargo.toml`.
