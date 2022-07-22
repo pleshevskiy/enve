@@ -1,10 +1,10 @@
-# itconfig
+# enve
 
-[![CI](https://github.com/icetemple/itconfig-rs/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/icetemple/itconfig-rs/actions/workflows/ci.yml)
+[![CI](https://github.com/pleshevskiy/enve/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/pleshevskiy/enve/actions/workflows/ci.yml)
 [![unsafe forbidden](https://img.shields.io/badge/unsafe-forbidden-success.svg)](https://github.com/rust-secure-code/safety-dance/)
-[![Documentation](https://docs.rs/itconfig/badge.svg)](https://docs.rs/itconfig)
-[![Crates.io](https://img.shields.io/crates/v/itconfig)](https://crates.io/crates/itconfig)
-![Crates.io](https://img.shields.io/crates/l/itconfig)
+[![Documentation](https://docs.rs/pleshevskiy/badge.svg)](https://docs.rs/enve)
+[![Crates.io](https://img.shields.io/crates/v/enve)](https://crates.io/crates/enve)
+![Crates.io](https://img.shields.io/crates/l/enve)
 
 Easy build a configs from environment variables and use it in globally.
 
@@ -23,7 +23,7 @@ of it I decided to create my own library.
 
 The MSRV is 1.39.0
 
-Add `itconfig = { version = "1.0", features = ["macro"] }` as a dependency in
+Add `enve = { version = "1.0", features = ["mod"] }` as a dependency in
 `Cargo.toml`.
 
 `Cargo.toml` example:
@@ -35,17 +35,16 @@ version = "0.1.0"
 authors = ["Me <user@rust-lang.org>"]
 
 [dependencies]
-itconfig = { version = "1.0", features = ["macro"] }
+enve = { version = "1.0", features = ["mod"] }
 ```
 
 ## Basic usage
 
 ```rust
-use itconfig::config;
 use std::env;
 //use dotenv::dotenv;
 
-config! {
+enve::mod! {
     DEBUG: bool => false,
 
     #[env_name = "APP_HOST"]
@@ -97,7 +96,6 @@ Macro is an optional feature, disabled by default. You can use this library
 without macro
 
 ```rust
-use itconfig::*;
 use std::env;
 // use dotenv::dotenv;
 
@@ -106,9 +104,9 @@ fn main() {
     // or
     env::set_var("DATABASE_URL", "postgres://127.0.0.1:5432/test");
 
-    let database_url = get_env::<String>("DATABASE_URL").unwrap();
-    let new_profile: bool = get_env_or_default("FEATURE_NEW_PROFILE", false);
-    let articles_per_page: u32 = get_env_or_set_default("ARTICLES_PER_PAGE", 10);
+    let database_url = enve::get::<String>("DATABASE_URL").unwrap();
+    let new_profile: bool = enve::get("FEATURE_NEW_PROFILE").unwrap_or_default();
+    let articles_per_page: u32 = enve::get_or_set_default("ARTICLES_PER_PAGE", 10);
 }
 ```
 
@@ -120,39 +118,19 @@ cargo test --all-features
 
 ## Available features
 
-- **default** - ["primitives"]
 - **macro** - Activates `config!` macros for easy configure web application.
-- **primitives** - Group for features: `numbers` and `bool`.
-- **numbers** - Group for features: `int`, `uint` and `float`.
-- **int** - Group for features: `i8`, `i16`, `i32`, `i64`, `i128` and `isize`.
-- **uint** - Group for features: `u8`, `u16`, `u32`, `u64`, `u128` and `usize`.
-- **float** - Group for features: `f32` and `f64`
-- **i8** - impl EnvString for `i8` type
-- **i16** - impl EnvString for `i16` type
-- **i32** - impl EnvString for `i32` type
-- **i64** - impl EnvString for `i64` type
-- **i128** - impl EnvString for `i128` type
-- **isize** - impl EnvString for `isize` type
-- **u8** - impl EnvString for `u8` type
-- **u16** - impl EnvString for `u16` type
-- **u32** - impl EnvString for `u32` type
-- **u64** - impl EnvString for `u64` type
-- **u128** - impl EnvString for `u128` type
-- **usize** - impl EnvString for `usize` type
-- **f32** - impl EnvString for `f32` type
-- **f64** - impl EnvString for `f64` type
-- **bool** - impl EnvString for `bool` type
-- **json_array** - Add EnvString impl for vector type (uses optional
-  `serde_json` package). ⚠ **_DEPRECATED_**
+- **number** - Group for features: `int`, `uint` and `float`.
+- **bool** - impl EnvString for `bool` type `serde_json` package). ⚠
+  **_DEPRECATED_**
 
 ## License
 
-[MIT] © [Ice Temple](https://github.com/icetemple)
+[MIT] © [pleshevskiy](https://github.com/pleshevskiy)
 
 ## Contributors
 
 [pleshevskiy](https://github.com/pleshevskiy) (Dmitriy Pleshevskiy) – creator,
 maintainer.
 
-[documentation]: https://docs.rs/itconfig
-[MIT]: https://github.com/icetemple/itconfig-rs/blob/master/LICENSE
+[documentation]: https://docs.rs/enve
+[MIT]: https://github.com/icetemple/enve-rs/blob/master/LICENSE

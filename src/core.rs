@@ -8,6 +8,7 @@ pub mod vec;
 #[cfg(feature = "vec")]
 pub use vec::*;
 
+use crate::error::Error;
 use std::convert::{Infallible, TryFrom};
 
 /// Wrapper under String type.
@@ -17,6 +18,14 @@ use std::convert::{Infallible, TryFrom};
 ///
 #[derive(Debug, Default, PartialEq, Eq, Clone)]
 pub struct EString(String);
+
+impl EString {
+    #[inline]
+    pub fn parse<T: TryFrom<EString>>(self) -> Result<T, Error> {
+        let orig = self.0.clone();
+        <T as TryFrom<EString>>::try_from(self).map_err(|_| Error::Parse(orig))
+    }
+}
 
 impl<T> From<T> for EString
 where

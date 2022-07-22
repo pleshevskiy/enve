@@ -4,14 +4,14 @@ use std::env;
 #[macro_use]
 extern crate lazy_static;
 #[macro_use]
-extern crate itconfig;
+extern crate enve;
 
 fn setup_env_var(key: &'static str, initial: String) {
     env::set_var(key, initial);
 }
 
 fn source_get_env() -> u32 {
-    itconfig::get_env::<u32>("TEST").unwrap()
+    enve::get::<u32>("TEST").unwrap()
 }
 
 fn lazy_get_env() -> u32 {

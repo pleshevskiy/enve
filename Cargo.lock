@@ -176,6 +176,26 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3f107b87b6afc2a64fd13cac55fe06d6c8859f12d4b14cbcdd2c67d0976781be"
 
 [[package]]
+name = "enve"
+version = "1.1.1"
+dependencies = [
+ "criterion",
+ "enve_mod",
+ "lazy_static",
+]
+
+[[package]]
+name = "enve_mod"
+version = "1.1.1"
+dependencies = [
+ "enve",
+ "lazy_static",
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "half"
 version = "1.8.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -188,26 +208,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "62b467343b94ba476dcb2500d242dadbb39557df889310ac77c5d99100aaac33"
 dependencies = [
  "libc",
-]
-
-[[package]]
-name = "itconfig"
-version = "1.1.1"
-dependencies = [
- "criterion",
- "itconfig-macro",
- "lazy_static",
-]
-
-[[package]]
-name = "itconfig-macro"
-version = "1.1.1"
-dependencies = [
- "itconfig",
- "lazy_static",
- "proc-macro2",
- "quote",
- "syn",
 ]
 
 [[package]]
