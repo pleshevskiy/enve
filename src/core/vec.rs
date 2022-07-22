@@ -1,4 +1,4 @@
-use crate::core::EnvString;
+use crate::core::EString;
 use std::convert::TryFrom;
 use std::fmt::Write;
 
@@ -42,16 +42,16 @@ where
     }
 }
 
-impl<T, const SEP: char> TryFrom<EnvString> for SepVec<T, SEP>
+impl<T, const SEP: char> TryFrom<EString> for SepVec<T, SEP>
 where
-    T: TryFrom<EnvString> + std::fmt::Display,
+    T: TryFrom<EString> + std::fmt::Display,
 {
     type Error = T::Error;
 
-    fn try_from(value: EnvString) -> Result<Self, Self::Error> {
+    fn try_from(value: EString) -> Result<Self, Self::Error> {
         let inner = value
             .split(SEP)
-            .map(EnvString::from)
+            .map(EString::from)
             .map(T::try_from)
             .collect::<Result<Vec<_>, _>>()?;
         Ok(Self(inner))

@@ -22,7 +22,7 @@ quote = "1.0.9"
 proc-macro2 = "1.0.24"
 
 [dev-dependencies]
-itconfig = { path = "../itconfig" }
+itconfig = { path = ".." }
 lazy_static = "1.4.0"
 
 [badges]

@@ -194,6 +194,7 @@ dependencies = [
 name = "itconfig"
 version = "1.1.1"
 dependencies = [
+ "criterion",
  "itconfig-macro",
  "lazy_static",
 ]
@@ -207,15 +208,6 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn",
-]
-
-[[package]]
-name = "itconfig_tests"
-version = "0.1.0"
-dependencies = [
- "criterion",
- "itconfig",
- "lazy_static",
 ]
 
 [[package]]
