@@ -15,52 +15,19 @@ readme = "../README.md"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [features]
-default = ["primitives"]
+default = []
 
 macro = ["itconfig-macro"]
 
-primitives = ["numbers", "bool"]
-numbers = ["int", "uint", "float"]
-int = ["i8", "i16", "i32", "i64", "i128", "isize"]
-uint = ["u8", "u16", "u32", "u64", "u128", "usize"]
-float = ["f32", "f64"]
-
-i8    = []
-i16   = []
-i32   = []
-i64   = []
-i128  = []
-isize = []
-
-u8    = []
-u16   = []
-u32   = []
-u64   = []
-u128  = []
-usize = []
-
-f32   = []
-f64   = []
-
+number = []
 bool  = []
-
-# deprecated since 1.1
-json_array = ["serde_json"]
+vec = []
 
 [dependencies]
-serde_json = { version = "1", optional = true }
 itconfig-macro = { version = "1.1", path = "../itconfig-macro", optional = true }
 
 [dev-dependencies]
 lazy_static = "1.4.0"
-# required for examples
-rocket = "0.5.0-rc.2"
-hyper = { version = "0.14.4", features = ["full"] }
-serde_json = "1.0.62"
-tokio = { version = "1.2.0", features = ["macros", "rt-multi-thread"] }
-bytes = "1.0.1"
-futures-util = { version = "0.3.13", default-features = false }
-pretty_env_logger = "0.4.0"
 
 [badges]
 maintenance = { status = "passively-maintained" }
@@ -68,14 +35,4 @@ maintenance = { status = "passively-maintained" }
 # https://docs.rs/about
 [package.metadata.docs.rs]
 all-features = true
-
-[[example]]
-name = "hyper"
-path = "../examples/hyper.rs"
-required-features = ["macro"]
-
-[[example]]
-name = "rocket"
-path = "../examples/rocket.rs"
-required-features = ["macro"]
 

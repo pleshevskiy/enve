@@ -137,7 +137,7 @@
 #![forbid(non_ascii_idents)]
 #![deny(
     missing_debug_implementations,
-    missing_docs,
+    // missing_docs,
     unstable_features,
     unused_imports,
     unused_qualifications
@@ -148,16 +148,13 @@
 
 /////////////////////////////////////////////////////////////////////////////
 
-mod envstr;
+pub mod core;
 mod error;
-mod get_env;
-mod get_vec_env;
-pub(crate) mod utils;
+mod utils;
 
-pub use self::envstr::*;
+pub use self::core::*;
 pub use self::error::*;
-pub use self::get_env::*;
-pub use self::get_vec_env::*;
+pub use self::utils::*;
 
 #[cfg(feature = "macro")]
 extern crate itconfig_macro;
