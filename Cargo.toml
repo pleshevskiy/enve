@@ -21,12 +21,11 @@ readme = "../README.md"
 
 [features]
 default = []
-
-macro = ["enve_mod"]
-
 number = []
 bool  = []
 vec = []
+
+macro = ["enve_mod"]
 
 [dependencies]
 enve_mod = { version = "1.1", path = "./enve_mod", optional = true }
@@ -41,4 +40,8 @@ maintenance = { status = "actively-developed" }
 # https://docs.rs/about
 [package.metadata.docs.rs]
 all-features = true
+
+[[example]]
+name = "calc"
+required-features = ["number", "vec"]
 
