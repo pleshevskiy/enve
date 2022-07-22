@@ -135,6 +135,7 @@ mod tests {
             let en = TestCase::<7>.to_string();
 
             [
+                ("1", true),
                 ("y", true),
                 ("yes", true),
                 ("true", true),
@@ -142,6 +143,7 @@ mod tests {
                 ("on", true),
                 ("false", false),
                 ("f", false),
+                ("0", false),
             ]
             .iter()
             .for_each(|(val, expected)| {
