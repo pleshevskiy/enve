@@ -91,8 +91,18 @@ mod tests {
         use super::*;
 
         #[test]
-        fn should_throw_parse_error() {
+        fn should_return_parsed_num() {
             let en = TestCase::<4>.to_string();
+            env::set_var(&en, "-10");
+            match get::<i32>(&en) {
+                Ok(res) => assert_eq!(res, -10),
+                _ => unreachable!(),
+            };
+        }
+
+        #[test]
+        fn should_throw_parse_error() {
+            let en = TestCase::<5>.to_string();
             env::set_var(&en, "-10");
             match get::<u32>(&en) {
                 Err(Error::Parse(orig)) => {
@@ -104,7 +114,7 @@ mod tests {
 
         #[test]
         fn should_set_default_num_if_var_is_no_present() {
-            let en = TestCase::<5>.to_string();
+            let en = TestCase::<6>.to_string();
             let orig = 10;
             match get_or_set_default(&en, orig) {
                 Ok(res) => {
@@ -122,7 +132,7 @@ mod tests {
 
         #[test]
         fn should_parse_bool_variable() {
-            let en = TestCase::<5>.to_string();
+            let en = TestCase::<7>.to_string();
 
             [
                 ("y", true),
@@ -150,11 +160,11 @@ mod tests {
     #[cfg(feature = "vec")]
     mod vector {
         use super::*;
-        use crate::core::vec::{CommaVec, SepVec};
+        use crate::core::vec::{CommaVec, SemiVec, SepVec};
 
         #[test]
         fn should_return_var_as_vector() {
-            let en = TestCase::<6>.to_string();
+            let en = TestCase::<8>.to_string();
 
             env::set_var(&en, "1,2,3,4,5");
             match get::<CommaVec<i32>>(&en) {
@@ -164,8 +174,41 @@ mod tests {
         }
 
         #[test]
+        fn should_trim_identations_before_parsing() {
+            let en = TestCase::<9>.to_string();
+
+            let input = "
+1 , 2, 3,
+4,5";
+
+            env::set_var(&en, input);
+            match get::<CommaVec<i32>>(&en) {
+                Ok(res) => assert_eq!(*res, vec![1, 2, 3, 4, 5]),
+                _ => unreachable!(),
+            };
+        }
+
+        #[test]
+        fn should_return_vector_of_vectors() {
+            let en = TestCase::<10>.to_string();
+
+            env::set_var(&en, "1,2; 3,4,5; 6,7");
+            match get::<SemiVec<CommaVec<i32>>>(&en) {
+                Ok(res) => assert_eq!(
+                    res,
+                    SemiVec::from(vec![
+                        CommaVec::from(vec![1, 2]),
+                        CommaVec::from(vec![3, 4, 5]),
+                        CommaVec::from(vec![6, 7])
+                    ])
+                ),
+                _ => unreachable!(),
+            };
+        }
+
+        #[test]
         fn should_throw_parse_vec_error() {
-            let en = TestCase::<7>.to_string();
+            let en = TestCase::<11>.to_string();
             env::set_var(&en, "1,2,3,4,5");
             match get::<SepVec<i32, '+'>>(&en) {
                 Err(Error::Parse(orig)) => {
@@ -177,7 +220,7 @@ mod tests {
 
         #[test]
         fn should_set_default_vector_if_var_is_no_present() {
-            let en = TestCase::<8>.to_string();
+            let en = TestCase::<12>.to_string();
             let orig = CommaVec::from(vec![1, 2, 3, 4]);
             match get_or_set_default(&en, orig.clone()) {
                 Ok(res) => {

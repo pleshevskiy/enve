@@ -51,6 +51,7 @@ where
     fn try_from(value: EString) -> Result<Self, Self::Error> {
         let inner = value
             .split(SEP)
+            .map(|p| p.trim())
             .map(EString::from)
             .map(T::try_from)
             .collect::<Result<Vec<_>, _>>()?;
