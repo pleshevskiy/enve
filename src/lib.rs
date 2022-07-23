@@ -137,24 +137,25 @@
 #![forbid(non_ascii_idents)]
 #![deny(
     missing_debug_implementations,
-    // missing_docs,
+    missing_docs,
     unstable_features,
     unused_imports,
     unused_qualifications
 )]
+#![warn(missing_docs)]
 // Clippy lints
 #![deny(clippy::all)]
 #![allow(clippy::needless_doctest_main)]
 
 /////////////////////////////////////////////////////////////////////////////
 
-pub mod core;
+mod core;
 mod error;
-mod utils;
+pub mod estr;
 
 pub use self::core::*;
-pub use self::error::*;
-pub use self::utils::*;
+pub use self::core::{get, get_or_set_default, sget, sset};
+pub use self::error::Error;
 
 #[cfg(feature = "macro")]
 extern crate enve_mod;

@@ -4,7 +4,7 @@ use std::ffi::OsString;
 use std::fmt;
 
 /// The error type for operations interacting with environment variables
-#[derive(Debug, PartialEq)]
+#[derive(Debug)]
 pub enum Error {
     /// The specified environment variable was not present in the current process's environment.
     NotPresent,
@@ -43,5 +43,11 @@ impl From<VarError> for Error {
             VarError::NotPresent => Error::NotPresent,
             VarError::NotUnicode(inner) => Error::Invalid(inner),
         }
+    }
+}
+
+impl From<estring::ParseError> for Error {
+    fn from(err: estring::ParseError) -> Self {
+        Error::Parse(err.clone())
     }
 }

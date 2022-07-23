@@ -1,6 +1,7 @@
 [workspace]
 members = [
-    "enve_mod",
+  "estring",
+  "enve_mod",
 ]
 
 [package]
@@ -21,13 +22,14 @@ readme = "../README.md"
 
 [features]
 default = []
-number = []
-bool  = []
-vec = []
+number = ["estring/number"]
+bool  = ["estring/bool"]
+vec = ["estring/vec"]
 
 macro = ["enve_mod"]
 
 [dependencies]
+estring = { version = "0", path = "./estring" }
 enve_mod = { version = "1.1", path = "./enve_mod", optional = true }
 
 [dev-dependencies]

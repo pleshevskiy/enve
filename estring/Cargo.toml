@@ -1,0 +1,28 @@
+[package]
+name = "estring"
+description = "A simple way to parse a string using type annotations"
+version = "0.1.0"
+edition = "2018"
+authors = ["Dmitriy Pleshevskiy <dmitriy@ideascup.me>"]
+readme = "README.md"
+repository = "https://github.com/pleshevskiy/itconfig-rs/tree/redesign/estring"
+license = "MIT"
+keywords = ["parsing", "type", "annotations", "customizable"]
+categories = ["data-structures", "parsing"]
+
+# rust-version = "1.51.0" # The first version of Cargo that supports this field is 1.56.0
+
+[metadata]
+msrv = "1.51.0"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[features]
+number = []
+bool = []
+vec = []
+
+[dependencies]
+
+[badges]
+maintenance = { status = "actively-developed" }

@@ -1,4 +1,4 @@
-use enve::core::SepVec;
+use enve::estr::SepVec;
 
 type MinusVec<T> = SepVec<T, '-'>;
 type PlusVec<T> = SepVec<T, '+'>;
