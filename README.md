@@ -47,7 +47,7 @@ fn main() -> Result<(), enve::Error> {
 
 ## Installation
 
-The MSRV is 1.39.0
+The MSRV is 1.51.0
 
 Add `enve = { version = "0.1", features = ["prim", "vec"] }` as a dependency in
 `Cargo.toml`.
