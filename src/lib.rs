@@ -1,4 +1,4 @@
-//! # itconfig
+//! # enve
 //!
 //! Simple configuration with macro for rust application.
 //!
@@ -16,7 +16,7 @@
 //!
 //! These macros require a Rust compiler version 1.31 or newer.
 //!
-//! Add `itconfig = { version = "1.0", features = ["macro"] }` as a dependency in `Cargo.toml`.
+//! Add `enve = { version = "1.0", features = ["macro"] }` as a dependency in `Cargo.toml`.
 //!
 //!
 //! `Cargo.toml` example:
@@ -28,14 +28,14 @@
 //! authors = ["Me <user@rust-lang.org>"]
 //!
 //! [dependencies]
-//! itconfig = { version = "1.0", features = ["macro"] }
+//! enve = { version = "1.0", features = ["macro"] }
 //! ```
 //!
 //!
 //! ## Basic usage
 //!
 //! ```rust
-//! use itconfig::config;
+//! use enve::config;
 //! use std::env;
 //! //use dotenv::dotenv;
 //!
@@ -90,7 +90,7 @@
 //! Macro is an optional feature, disabled by default. You can use this library without macro.
 //!
 //! ```rust
-//! use itconfig::*;
+//! use enve::*;
 //! use std::env;
 //! // use dotenv::dotenv;
 //!
@@ -142,24 +142,22 @@
     unused_imports,
     unused_qualifications
 )]
+#![warn(missing_docs)]
 // Clippy lints
 #![deny(clippy::all)]
 #![allow(clippy::needless_doctest_main)]
 
 /////////////////////////////////////////////////////////////////////////////
 
-mod envstr;
+mod core;
 mod error;
-mod get_env;
-mod get_vec_env;
-pub(crate) mod utils;
+pub mod estr;
 
-pub use self::envstr::*;
-pub use self::error::*;
-pub use self::get_env::*;
-pub use self::get_vec_env::*;
+pub use self::core::*;
+pub use self::core::{get, get_or_set_default, sget, sset};
+pub use self::error::Error;
 
 #[cfg(feature = "macro")]
-extern crate itconfig_macro;
+extern crate enve_mod;
 #[cfg(feature = "macro")]
-pub use itconfig_macro::*;
+pub use enve_mod::*;
