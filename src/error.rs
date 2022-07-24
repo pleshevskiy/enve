@@ -20,15 +20,14 @@ pub enum Error {
 
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        use Error::*;
         match &self {
-            NotPresent => f.write_str("The specified env variable was not present"),
-            Invalid(inner) => write!(
+            Error::NotPresent => f.write_str("The specified env variable was not present"),
+            Error::Invalid(inner) => write!(
                 f,
                 "The specified env variable was found, but it did not valid: '{:?}'",
                 inner,
             ),
-            Parse(env_name) => {
+            Error::Parse(env_name) => {
                 write!(f, r#"Failed to parse environment variable "{}""#, env_name)
             }
         }
