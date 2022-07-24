@@ -1,5 +1,5 @@
 #[cfg(feature = "vec")]
-pub mod vec;
+mod vec;
 #[cfg(feature = "vec")]
 pub use vec::{CommaVec, SemiVec};
 

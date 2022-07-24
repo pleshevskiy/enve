@@ -2,6 +2,30 @@ use crate::error::Error;
 use estring::EString;
 use std::convert::TryFrom;
 
+/// Fetches the environment variable `key` from the current process. It set value `default`
+/// if environment variable `key` ins'n set. Then this function tries to parse ``EString`` to
+/// expected type by annotations.
+///
+/// # Errors
+///
+/// This function will return an error if ``EString`` cannot parse substring.
+///
+/// This function may return an error if the environment variable's name contains
+/// the equal sign character (`=`) or the NUL character.
+///
+/// This function will return an error if the environment variable's value is
+/// not valid Unicode. If this is not desired, consider using [`var_os`].
+///
+/// # Examples
+///
+/// ```
+/// let key = "doc_get_or_set";
+/// match enve::get_or_set_default::<i32>(key, 10) {
+///     Ok(res) => assert_eq!(res, 10),
+///     Err(e) => println!("couldn't interpret {key}: {e}"),
+/// }
+/// ```
+#[allow(clippy::needless_pass_by_value)]
 pub fn get_or_set_default<R>(env_name: &str, default: R) -> Result<R, Error>
 where
     R: TryFrom<EString> + std::fmt::Display,
@@ -12,25 +36,84 @@ where
     })
 }
 
-pub fn get<R>(env_name: &str) -> Result<R, Error>
+/// Fetches the environment variable `key` from the current process and then tries to parse
+/// ``EString`` to expected type by annotations.
+///
+/// # Errors
+///
+/// This function will return an error if ``EString`` cannot parse substring.
+///
+/// This function will return an error if the environment variable isn't set.
+///
+/// This function may return an error if the environment variable's name contains
+/// the equal sign character (`=`) or the NUL character.
+///
+/// This function will return an error if the environment variable's value is
+/// not valid Unicode. If this is not desired, consider using [`var_os`].
+///
+/// # Examples
+///
+/// ```
+/// let key = "doc_get";
+/// enve::sset(key, "10");
+/// match enve::get::<i32>(key) {
+///     Ok(res) => assert_eq!(res, 10),
+///     Err(e) => println!("couldn't interpret {key}: {e}"),
+/// }
+/// ```
+pub fn get<R>(key: &str) -> Result<R, Error>
 where
     R: TryFrom<EString>,
 {
-    sget(env_name).and_then(|v| v.parse().map_err(Error::from))
+    sget(key).and_then(|v| v.parse().map_err(Error::from))
 }
 
-pub fn sget(env_name: &str) -> Result<EString, Error> {
-    std::env::var(env_name)
-        .map_err(Error::from)
-        .map(EString::from)
+/// Fetches the environment variable `key` from the current process and returns value as
+/// ``EString``.
+///
+/// # Errors
+///
+/// This function will return an error if the environment variable isn't set.
+///
+/// This function may return an error if the environment variable's name contains
+/// the equal sign character (`=`) or the NUL character.
+///
+/// This function will return an error if the environment variable's value is
+/// not valid Unicode. If this is not desired, consider using [`var_os`].
+///
+/// # Examples
+///
+/// ```
+/// let key = "HOME";
+/// match enve::sget(key) {
+///     Ok(val) => println!("{key}: {val:?}"),
+///     Err(e) => println!("couldn't interpret {key}: {e}"),
+/// }
+/// ```
+pub fn sget(key: &str) -> Result<EString, Error> {
+    std::env::var(key).map_err(Error::from).map(EString::from)
 }
 
-pub fn sset<V>(env_name: &str, value: V) -> EString
+/// Sets the environment variable `key` to the value `value` for the currently running
+/// process and then returns `value` as a ``EString``.
+///
+/// # Panics
+///
+/// This function may panic if `key` is empty, contains an ASCII equals sign `'='`
+/// or the NUL character `'\0'`, or when `value` contains the NUL character.
+///
+/// # Examples
+///
+/// ```
+/// let estr = enve::sset("KEY", "10");
+/// assert_eq!(estr.to_string(), String::from("10"));
+/// ```
+pub fn sset<V>(key: &str, value: V) -> EString
 where
     V: std::fmt::Display,
 {
     let val = value.to_string();
-    std::env::set_var(env_name, &val);
+    std::env::set_var(key, &val);
     val.into()
 }
 
@@ -108,7 +191,7 @@ mod tests {
             std::env::set_var(&en, "-10");
             match get::<u32>(&en) {
                 Err(Error::Parse(orig)) => {
-                    assert_eq!(orig, String::from("-10"))
+                    assert_eq!(orig, String::from("-10"));
                 }
                 _ => unreachable!(),
             };
@@ -136,7 +219,7 @@ mod tests {
         fn should_parse_bool_variable() {
             let en = TestCase::<7>.to_string();
 
-            [
+            let test_cases = [
                 ("1", true),
                 ("y", true),
                 ("yes", true),
@@ -146,18 +229,17 @@ mod tests {
                 ("false", false),
                 ("f", false),
                 ("0", false),
-            ]
-            .iter()
-            .for_each(|(val, expected)| {
+            ];
+            for (val, expected) in test_cases {
                 let mut en = en.clone();
                 en.push_str(val.as_ref());
 
                 std::env::set_var(&en, val);
                 match get::<bool>(&en) {
-                    Ok(res) => assert_eq!(res, *expected),
+                    Ok(res) => assert_eq!(res, expected),
                     _ => unreachable!(),
                 };
-            })
+            }
         }
     }
 
@@ -216,7 +298,7 @@ mod tests {
             std::env::set_var(&en, "1,2,3,4,5");
             match get::<SepVec<i32, '+'>>(&en) {
                 Err(Error::Parse(orig)) => {
-                    assert_eq!(orig, String::from("1,2,3,4,5"))
+                    assert_eq!(orig, String::from("1,2,3,4,5"));
                 }
                 _ => unreachable!(),
             };
