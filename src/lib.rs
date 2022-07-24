@@ -156,8 +156,3 @@ pub mod estr;
 pub use self::core::*;
 pub use self::core::{get, get_or_set_default, sget, sset};
 pub use self::error::Error;
-
-#[cfg(feature = "macro")]
-extern crate enve_mod;
-#[cfg(feature = "macro")]
-pub use enve_mod::*;

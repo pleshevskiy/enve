@@ -1,8 +1,5 @@
 [workspace]
-members = [
-  "estring",
-  "enve_mod",
-]
+members = []
 
 [package]
 name = "enve"
@@ -26,11 +23,8 @@ number = ["estring/number"]
 bool  = ["estring/bool"]
 vec = ["estring/vec"]
 
-macro = ["enve_mod"]
-
 [dependencies]
 estring = "0.1"
-enve_mod = { version = "1.1", path = "./enve_mod", optional = true }
 
 [dev-dependencies]
 lazy_static = "1.4.0"
