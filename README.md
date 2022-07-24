@@ -1,10 +1,11 @@
 # enve
 
-[![CI](https://github.com/pleshevskiy/enve/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/pleshevskiy/enve/actions/workflows/ci.yml)
-[![unsafe forbidden](https://img.shields.io/badge/unsafe-forbidden-success.svg)](https://github.com/rust-secure-code/safety-dance/)
-[![Documentation](https://docs.rs/pleshevskiy/badge.svg)](https://docs.rs/enve)
-[![Crates.io](https://img.shields.io/crates/v/enve)](https://crates.io/crates/enve)
-![Crates.io](https://img.shields.io/crates/l/enve)
+[![GitHub Workflow Status](https://img.shields.io/github/workflow/status/pleshevskiy/enve/CI?label=tests&logo=github&style=flat-square)](https://github.com/pleshevskiy/enve/actions/workflows/ci.yml)
+[![docs.rs](https://img.shields.io/docsrs/enve?style=flat-square)](https://docs.rs/enve)
+[![Crates.io](https://img.shields.io/crates/v/enve?style=flat-square)](https://crates.io/crates/enve)
+[![Crates.io](https://img.shields.io/crates/l/enve?style=flat-square)](https://github.com/pleshevskiy/enve/LICENSE)
+[![unsafe forbidden](https://img.shields.io/badge/unsafe-forbidden-success.svg?style=flat-square)](https://github.com/rust-secure-code/safety-dance/)
+[![Matrix](https://img.shields.io/matrix/enve_team:matrix.org?label=matrix&style=flat-square)](https://matrix.to/#/!yZalHbWfGRWOMaetSn:matrix.org?via=matrix.org)
 
 `enve` helps you work with environment variables and convert it to **any type**
 using only **type annotations**.
