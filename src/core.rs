@@ -18,11 +18,11 @@ use std::convert::TryFrom;
 ///
 /// # Examples
 ///
-/// ```
+/// ```rust
 /// let key = "doc_get_or_set";
 /// match enve::get_or_set_default::<i32>(key, 10) {
 ///     Ok(res) => assert_eq!(res, 10),
-///     Err(e) => println!("couldn't interpret {key}: {e}"),
+///     Err(e) => println!("couldn't interpret {}: {}", key, e),
 /// }
 /// ```
 #[allow(clippy::needless_pass_by_value)]
@@ -53,12 +53,12 @@ where
 ///
 /// # Examples
 ///
-/// ```
+/// ```rust
 /// let key = "doc_get";
 /// enve::sset(key, "10");
 /// match enve::get::<i32>(key) {
 ///     Ok(res) => assert_eq!(res, 10),
-///     Err(e) => println!("couldn't interpret {key}: {e}"),
+///     Err(e) => println!("couldn't interpret {}: {}", key, e),
 /// }
 /// ```
 pub fn get<R>(key: &str) -> Result<R, Error>
@@ -83,11 +83,11 @@ where
 ///
 /// # Examples
 ///
-/// ```
+/// ```rust
 /// let key = "HOME";
 /// match enve::sget(key) {
-///     Ok(val) => println!("{key}: {val:?}"),
-///     Err(e) => println!("couldn't interpret {key}: {e}"),
+///     Ok(val) => println!("{}: {:?}", key, val),
+///     Err(e) => println!("couldn't interpret {}: {}", key, e),
 /// }
 /// ```
 pub fn sget(key: &str) -> Result<EString, Error> {
@@ -230,13 +230,13 @@ mod tests {
                 ("f", false),
                 ("0", false),
             ];
-            for (val, expected) in test_cases {
+            for (val, expected) in &test_cases {
                 let mut en = en.clone();
                 en.push_str(val.as_ref());
 
                 std::env::set_var(&en, val);
                 match get::<bool>(&en) {
-                    Ok(res) => assert_eq!(res, expected),
+                    Ok(res) => assert_eq!(res, *expected),
                     _ => unreachable!(),
                 };
             }
