@@ -17,7 +17,7 @@ All standard environment variable types are included, but `enve` under the hood
 uses [estring](https://github.com/pleshevskiy/estring), so you can easily create
 your own type.
 
-## [Documentation](https://docs.rs/estring)
+## [Documentation](https://docs.rs/enve)
 
 Look at the [examples] to see the power!
 
