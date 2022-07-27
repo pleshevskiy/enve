@@ -11,6 +11,6 @@ dependencies = [
 
 [[package]]
 name = "estring"
-version = "0.2.0"
+version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "515fc26a9876dfa25822d8cc040c6e4497ff9f5be96f101ee136d6ece160d2cc"
+checksum = "5d0069d8a2500e291e248b96dc353cf71e2693b278058fd2954b5ed90c836e77"
