@@ -1,6 +1,6 @@
 [package]
 name = "enve"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Dmitriy Pleshevskiy <dmitriy@ideascup.me>"]
 description = "it helps you work with environment variables and convert it to any type using only type annotations"
 categories = ["config"]

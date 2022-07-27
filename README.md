@@ -3,11 +3,11 @@
 [![Crates.io](https://img.shields.io/crates/v/enve?style=flat-square)](https://crates.io/crates/enve)
 [![docs.rs](https://img.shields.io/docsrs/enve?style=flat-square)](https://docs.rs/enve)
 [![GitHub Workflow Status](https://img.shields.io/github/workflow/status/pleshevskiy/enve/CI?label=tests&logo=github&style=flat-square)](https://github.com/pleshevskiy/enve/actions/workflows/ci.yml)
-![The MSRV](https://img.shields.io/badge/MSRV-1.51.0-red.svg)
+![The MSRV](https://img.shields.io/badge/MSRV-1.59.0-red.svg)
 
 ```toml
 [dependencies]
-enve = "0.1"
+enve = "0.2"
 ```
 
 `enve` helps you work with environment variables and convert it to **any type**
