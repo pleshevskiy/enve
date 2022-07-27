@@ -1,6 +1,5 @@
 use crate::error::Error;
-use estring::EString;
-use std::convert::TryFrom;
+use estring::{EString, ParseFragment, ToEString};
 
 /// Fetches the environment variable `key` from the current process. It set value `default`
 /// if environment variable `key` ins'n set. Then this function tries to parse ``EString`` to
@@ -28,10 +27,10 @@ use std::convert::TryFrom;
 #[allow(clippy::needless_pass_by_value)]
 pub fn get_or_set_default<R>(env_name: &str, default: R) -> Result<R, Error>
 where
-    R: TryFrom<EString> + std::fmt::Display,
+    R: ParseFragment + ToEString,
 {
     get::<R>(env_name).or_else(|err| match err {
-        Error::NotPresent => sset(env_name, &default).parse().map_err(Error::from),
+        Error::NotPresent => sset(env_name, default).parse().map_err(Error::from),
         _ => Err(err),
     })
 }
@@ -63,7 +62,7 @@ where
 /// ```
 pub fn get<R>(key: &str) -> Result<R, Error>
 where
-    R: TryFrom<EString>,
+    R: ParseFragment,
 {
     sget(key).and_then(|v| v.parse().map_err(Error::from))
 }
@@ -108,18 +107,20 @@ pub fn sget(key: &str) -> Result<EString, Error> {
 /// let estr = enve::sset("KEY", "10");
 /// assert_eq!(estr.to_string(), String::from("10"));
 /// ```
+#[allow(clippy::needless_pass_by_value)]
 pub fn sset<V>(key: &str, value: V) -> EString
 where
-    V: std::fmt::Display,
+    V: ToEString,
 {
-    let val = value.to_string();
-    std::env::set_var(key, &val);
-    val.into()
+    let es = value.to_estring();
+    std::env::set_var(key, &*es);
+    es
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::estr::{CommaVec, SemiVec, SepVec};
 
     struct TestCase<const N: u8>;
 
@@ -171,150 +172,134 @@ mod tests {
         };
     }
 
-    #[cfg(feature = "number")]
-    mod numbers {
-        use super::*;
-
-        #[test]
-        fn should_return_parsed_num() {
-            let en = TestCase::<4>.to_string();
-            std::env::set_var(&en, "-10");
-            match get::<i32>(&en) {
-                Ok(res) => assert_eq!(res, -10),
-                _ => unreachable!(),
-            };
-        }
-
-        #[test]
-        fn should_throw_parse_error() {
-            let en = TestCase::<5>.to_string();
-            std::env::set_var(&en, "-10");
-            match get::<u32>(&en) {
-                Err(Error::Parse(orig)) => {
-                    assert_eq!(orig, String::from("-10"));
-                }
-                _ => unreachable!(),
-            };
-        }
-
-        #[test]
-        fn should_set_default_num_if_var_is_no_present() {
-            let en = TestCase::<6>.to_string();
-            let orig = 10;
-            match get_or_set_default(&en, orig) {
-                Ok(res) => {
-                    assert_eq!(res, orig);
-                    assert_eq!(std::env::var(&en).unwrap(), "10");
-                }
-                _ => unreachable!(),
-            };
-        }
+    #[test]
+    fn should_return_parsed_num() {
+        let en = TestCase::<4>.to_string();
+        std::env::set_var(&en, "-10");
+        match get::<i32>(&en) {
+            Ok(res) => assert_eq!(res, -10),
+            _ => unreachable!(),
+        };
     }
 
-    #[cfg(feature = "bool")]
-    mod boolean {
-        use super::*;
-
-        #[test]
-        fn should_parse_bool_variable() {
-            let en = TestCase::<7>.to_string();
-
-            let test_cases = [
-                ("1", true),
-                ("y", true),
-                ("yes", true),
-                ("true", true),
-                ("t", true),
-                ("on", true),
-                ("false", false),
-                ("f", false),
-                ("0", false),
-            ];
-            for (val, expected) in &test_cases {
-                let mut en = en.clone();
-                en.push_str(val.as_ref());
-
-                std::env::set_var(&en, val);
-                match get::<bool>(&en) {
-                    Ok(res) => assert_eq!(res, *expected),
-                    _ => unreachable!(),
-                };
+    #[test]
+    fn should_throw_parse_error() {
+        let en = TestCase::<5>.to_string();
+        std::env::set_var(&en, "-10");
+        match get::<u32>(&en) {
+            Err(Error::Parse(orig)) => {
+                assert_eq!(orig, EString::from("-10"));
             }
-        }
+            _ => unreachable!(),
+        };
     }
 
-    #[cfg(feature = "vec")]
-    mod vector {
-        use super::*;
-        use crate::estr::{CommaVec, SemiVec, SepVec};
+    #[test]
+    fn should_set_default_num_if_var_is_no_present() {
+        let en = TestCase::<6>.to_string();
+        let orig = 10;
+        match get_or_set_default(&en, orig) {
+            Ok(res) => {
+                assert_eq!(res, orig);
+                assert_eq!(std::env::var(&en).unwrap(), "10");
+            }
+            _ => unreachable!(),
+        };
+    }
 
-        #[test]
-        fn should_return_var_as_vector() {
-            let en = TestCase::<8>.to_string();
+    #[test]
+    fn should_parse_bool_variable() {
+        let en = TestCase::<7>.to_string();
 
-            std::env::set_var(&en, "1,2,3,4,5");
-            match get::<CommaVec<i32>>(&en) {
-                Ok(res) => assert_eq!(*res, vec![1, 2, 3, 4, 5]),
+        let test_cases = [
+            ("1", true),
+            ("y", true),
+            ("yes", true),
+            ("true", true),
+            ("t", true),
+            ("on", true),
+            ("false", false),
+            ("f", false),
+            ("0", false),
+        ];
+        for (val, expected) in test_cases {
+            let mut en = en.clone();
+            en.push_str(val.as_ref());
+
+            std::env::set_var(&en, val);
+            match get::<bool>(&en) {
+                Ok(res) => assert_eq!(res, expected),
                 _ => unreachable!(),
             };
         }
+    }
 
-        #[test]
-        fn should_trim_identations_before_parsing() {
-            let en = TestCase::<9>.to_string();
+    #[test]
+    fn should_return_var_as_vector() {
+        let en = TestCase::<8>.to_string();
 
-            let input = "
+        std::env::set_var(&en, "1,2,3,4,5");
+        match get::<CommaVec<i32>>(&en) {
+            Ok(res) => assert_eq!(*res, vec![1, 2, 3, 4, 5]),
+            _ => unreachable!(),
+        };
+    }
+
+    #[test]
+    fn should_trim_identations_before_parsing() {
+        let en = TestCase::<9>.to_string();
+
+        let input = "
 1 , 2, 3,
 4,5";
 
-            std::env::set_var(&en, input);
-            match get::<CommaVec<i32>>(&en) {
-                Ok(res) => assert_eq!(*res, vec![1, 2, 3, 4, 5]),
-                _ => unreachable!(),
-            };
-        }
+        std::env::set_var(&en, input);
+        match get::<CommaVec<i32>>(&en) {
+            Ok(res) => assert_eq!(*res, vec![1, 2, 3, 4, 5]),
+            _ => unreachable!(),
+        };
+    }
 
-        #[test]
-        fn should_return_vector_of_vectors() {
-            let en = TestCase::<10>.to_string();
+    #[test]
+    fn should_return_vector_of_vectors() {
+        let en = TestCase::<10>.to_string();
 
-            std::env::set_var(&en, "1,2; 3,4,5; 6,7");
-            match get::<SemiVec<CommaVec<i32>>>(&en) {
-                Ok(res) => assert_eq!(
-                    res,
-                    SemiVec::from(vec![
-                        CommaVec::from(vec![1, 2]),
-                        CommaVec::from(vec![3, 4, 5]),
-                        CommaVec::from(vec![6, 7])
-                    ])
-                ),
-                _ => unreachable!(),
-            };
-        }
+        std::env::set_var(&en, "1,2; 3,4,5; 6,7");
+        match get::<SemiVec<CommaVec<i32>>>(&en) {
+            Ok(res) => assert_eq!(
+                res,
+                SemiVec::from(vec![
+                    CommaVec::from(vec![1, 2]),
+                    CommaVec::from(vec![3, 4, 5]),
+                    CommaVec::from(vec![6, 7])
+                ])
+            ),
+            _ => unreachable!(),
+        };
+    }
 
-        #[test]
-        fn should_throw_parse_vec_error() {
-            let en = TestCase::<11>.to_string();
-            std::env::set_var(&en, "1,2,3,4,5");
-            match get::<SepVec<i32, '+'>>(&en) {
-                Err(Error::Parse(orig)) => {
-                    assert_eq!(orig, String::from("1,2,3,4,5"));
-                }
-                _ => unreachable!(),
-            };
-        }
+    #[test]
+    fn should_throw_parse_vec_error() {
+        let en = TestCase::<11>.to_string();
+        std::env::set_var(&en, "1,2,3,4,5");
+        match get::<SepVec<i32, '+'>>(&en) {
+            Err(Error::Parse(orig)) => {
+                assert_eq!(orig, EString::from("1,2,3,4,5"));
+            }
+            _ => unreachable!(),
+        };
+    }
 
-        #[test]
-        fn should_set_default_vector_if_var_is_no_present() {
-            let en = TestCase::<12>.to_string();
-            let orig = CommaVec::from(vec![1, 2, 3, 4]);
-            match get_or_set_default(&en, orig.clone()) {
-                Ok(res) => {
-                    assert_eq!(res, orig);
-                    assert_eq!(std::env::var(&en).unwrap(), "1,2,3,4");
-                }
-                _ => unreachable!(),
-            };
-        }
+    #[test]
+    fn should_set_default_vector_if_var_is_no_present() {
+        let en = TestCase::<12>.to_string();
+        let orig = CommaVec::from(vec![1, 2, 3, 4]);
+        match get_or_set_default(&en, orig.clone()) {
+            Ok(res) => {
+                assert_eq!(res, orig);
+                assert_eq!(std::env::var(&en).unwrap(), "1,2,3,4");
+            }
+            _ => unreachable!(),
+        };
     }
 }

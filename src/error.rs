@@ -3,6 +3,8 @@ use std::error;
 use std::ffi::OsString;
 use std::fmt;
 
+use estring::EString;
+
 /// The error type for operations interacting with environment variables
 #[derive(Debug)]
 pub enum Error {
@@ -10,7 +12,7 @@ pub enum Error {
     NotPresent,
 
     /// Failed to parse the specified environment variable.
-    Parse(String),
+    Parse(EString),
 
     /// The specified environment variable was found, but it did not contain
     /// valid unicode data. The found data is returned as a payload of this
@@ -45,8 +47,8 @@ impl From<VarError> for Error {
     }
 }
 
-impl From<estring::ParseError> for Error {
-    fn from(err: estring::ParseError) -> Self {
-        Error::Parse(err.clone())
+impl From<estring::Error> for Error {
+    fn from(err: estring::Error) -> Self {
+        Error::Parse(err.0)
     }
 }
