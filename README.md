@@ -1,23 +1,29 @@
 # enve
 
-[![GitHub Workflow Status](https://img.shields.io/github/workflow/status/pleshevskiy/enve/CI?label=tests&logo=github&style=flat-square)](https://github.com/pleshevskiy/enve/actions/workflows/ci.yml)
-[![docs.rs](https://img.shields.io/docsrs/enve?style=flat-square)](https://docs.rs/enve)
 [![Crates.io](https://img.shields.io/crates/v/enve?style=flat-square)](https://crates.io/crates/enve)
-[![Crates.io](https://img.shields.io/crates/l/enve?style=flat-square)](https://github.com/pleshevskiy/enve/LICENSE)
-[![unsafe forbidden](https://img.shields.io/badge/unsafe-forbidden-success.svg?style=flat-square)](https://github.com/rust-secure-code/safety-dance/)
-[![Matrix](https://img.shields.io/matrix/enve_team:matrix.org?label=matrix&style=flat-square)](https://matrix.to/#/!yZalHbWfGRWOMaetSn:matrix.org?via=matrix.org)
+[![docs.rs](https://img.shields.io/docsrs/enve?style=flat-square)](https://docs.rs/enve)
+[![GitHub Workflow Status](https://img.shields.io/github/workflow/status/pleshevskiy/enve/CI?label=tests&logo=github&style=flat-square)](https://github.com/pleshevskiy/enve/actions/workflows/ci.yml)
+![The MSRV](https://img.shields.io/badge/MSRV-1.51.0-red.svg)
+
+```toml
+[dependencies]
+enve = "0.1"
+```
 
 `enve` helps you work with environment variables and convert it to **any type**
 using only **type annotations**.
-
-Look at the [examples](https://github.com/pleshevskiy/enve/tree/main/examples)
-to see the power!
 
 All standard environment variable types are included, but `enve` under the hood
 uses [estring](https://github.com/pleshevskiy/estring), so you can easily create
 your own type.
 
-## Getting started
+## [Documentation](https://docs.rs/estring)
+
+Look at the [examples] to see the power!
+
+[examples]: https://github.com/pleshevskiy/enve/tree/main/examples
+
+## Usage
 
 ```rust
 use enve::SepVec;
@@ -46,24 +52,11 @@ fn main() -> Result<(), enve::Error> {
 }
 ```
 
-## Installation
+## Contact Us
 
-The MSRV is 1.51.0
+Join us in:
 
-Add `enve = { version = "0.1", features = ["prim", "vec"] }` as a dependency in
-`Cargo.toml`.
-
-`Cargo.toml` example:
-
-```toml
-[package]
-name = "my-crate"
-version = "0.1.0"
-authors = ["Me <user@rust-lang.org>"]
-
-[dependencies]
-enve = { version = "0.1", features = ["prim", "vec"] }
-```
+[![Matrix](https://img.shields.io/badge/matrix-%23enve_team:matrix.org-blueviolet.svg?style=flat-square)](https://matrix.to/#/#enve_team:matrix.org)
 
 ## License
 
