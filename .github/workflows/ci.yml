@@ -19,7 +19,7 @@ jobs:
           - macos-latest
           - windows-latest
         rust:
-          - 1.51.0 # msrv
+          - 1.59.0 # msrv
           - stable
           - beta
           - nightly
