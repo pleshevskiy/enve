@@ -1,6 +1,8 @@
-#[cfg(feature = "vec")]
-mod vec;
-#[cfg(feature = "vec")]
-pub use vec::{CommaVec, SemiVec};
+#[cfg(feature = "structs")]
+mod structs;
+#[cfg(feature = "structs")]
+pub use structs::{CommaVec, SemiVec};
 
-pub use estring::core::*;
+pub use estring::core::EString;
+pub use estring::low::*;
+pub use estring::structs::*;

@@ -62,3 +62,5 @@ mod estr;
 pub use crate::core::{get, get_or_set_default, sget, sset};
 pub use error::Error;
 pub use estr::*;
+
+pub use estring;

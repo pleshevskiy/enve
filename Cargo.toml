@@ -5,12 +5,10 @@ authors = ["Dmitriy Pleshevskiy <dmitriy@ideascup.me>"]
 description = "it helps you work with environment variables and convert it to any type using only type annotations"
 categories = ["config"]
 keywords = ["env", "environment"]
-edition = "2018"
+edition = "2021"
 license = "MIT"
 repository = "https://github.com/pleshevskiy/enve"
-
-[package.metadata]
-msrv = "1.51.0"
+rust-version = "1.59.0"
 
 # https://docs.rs/about
 [package.metadata.docs.rs]
@@ -20,17 +18,21 @@ all-features = true
 
 [features]
 default = []
-number = ["estring/number"]
-bool  = ["estring/bool"]
-vec = ["estring/vec"]
+low-level = ["estring/low-level"]
+structs = ["estring/structs"]
+
+# deprecated
+number = []
+bool  = []
+vec = ["structs"]
 
 [dependencies]
-estring = "0.1"
+estring = "0.2"
 
 [badges]
 maintenance = { status = "actively-developed" }
 
 [[example]]
 name = "calc"
-required-features = ["number", "vec"]
+required-features = ["structs"]
 
