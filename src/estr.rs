@@ -4,5 +4,7 @@ mod structs;
 pub use structs::{CommaVec, SemiVec};
 
 pub use estring::core::EString;
+#[cfg(feature = "low-level")]
 pub use estring::low::*;
+#[cfg(feature = "structs")]
 pub use estring::structs::*;
