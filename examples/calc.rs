@@ -1,16 +1,18 @@
-use enve::SepVec;
+use enve::{
+    estring::{self, Aggregatable, Aggregate},
+    Product, SepVec, Sum,
+};
 
-type MinusVec<T> = SepVec<T, '-'>;
 type PlusVec<T> = SepVec<T, '+'>;
 type MulVec<T> = SepVec<T, '*'>;
 
 const HELP_MESSAGE: &str = "
 USAGE:
-E=10+10*2+4 cargo run --example calc --all-features
+E=10+10*2-4 cargo run --example calc --all-features
 ";
 
 fn main() -> Result<(), enve::Error> {
-    let res: f32 = enve::get::<PlusVec<MinusVec<MulVec<f32>>>>("E")
+    let res: f32 = enve::get::<Sum<PlusVec<MinusVec<Product<MulVec<f32>>>>>>("E")
         .map_err(|err| {
             match err {
                 enve::Error::NotPresent => eprintln!("The expression was not found"),
@@ -21,16 +23,46 @@ fn main() -> Result<(), enve::Error> {
             std::process::exit(0);
         })
         .unwrap()
-        .iter()
-        .map(|p| {
-            p.iter()
-                .map(|m| m.iter().product::<f32>())
-                .reduce(|acc, v| acc - v)
-                .unwrap_or_default()
-        })
-        .sum::<f32>();
+        .agg();
 
     println!("result: {}", res);
 
     Ok(())
+}
+
+struct MinusVec<T>(Vec<T>);
+
+impl<T> estring::ParseFragment for MinusVec<T>
+where
+    T: estring::ParseFragment,
+{
+    fn parse_frag(es: estring::EString) -> estring::Result<Self> {
+        let mut prev: Option<&str> = None;
+        es.split('-')
+            .map(str::trim)
+            .map(|val| match prev.replace(val) {
+                None => String::from(val),
+                Some(_) => {
+                    let mut s = val.to_owned();
+                    s.insert(0, '-');
+                    s
+                }
+            })
+            .filter(|val| !val.is_empty())
+            .map(estring::EString::from)
+            .map(T::parse_frag)
+            .collect::<estring::Result<Vec<T>>>()
+            .map(Self)
+    }
+}
+
+impl<T> estring::Aggregatable for MinusVec<T>
+where
+    T: Aggregatable,
+{
+    type Item = T::Item;
+
+    fn items(self) -> Vec<Self::Item> {
+        self.0.into_iter().flat_map(T::items).collect()
+    }
 }

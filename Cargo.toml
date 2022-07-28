@@ -20,6 +20,7 @@ all-features = true
 default = []
 low-level = ["estring/low-level"]
 structs = ["estring/structs"]
+aggs = ["estring/aggs"]
 
 # deprecated
 number = []
@@ -27,12 +28,12 @@ bool  = []
 vec = ["structs"]
 
 [dependencies]
-estring = "0.2"
+estring = "0.3"
 
 [badges]
 maintenance = { status = "actively-developed" }
 
 [[example]]
 name = "calc"
-required-features = ["structs"]
+required-features = ["structs", "aggs"]
 
