@@ -7,7 +7,7 @@
 
 ```toml
 [dependencies]
-enve = "0.2"
+enve = "0.3"
 ```
 
 `enve` helps you work with environment variables and convert it to **any type**
@@ -25,28 +25,60 @@ Look at the [examples] to see the power!
 
 ## Usage
 
+Basic
+
+```rust
+fn main() -> Result<(), enve::Error> {
+    enve::sset("E", "10");
+
+    let res: f32 = enve::get("E")?;
+
+    println!("result: {}", res);
+
+    Ok(())
+}
+```
+
+You can use predefined structs like `SepVec` if you enable `structs` feature.
+
+Note: You can use custom types as annotations! Just implement `ParseFragment`.
+
 ```rust
 use enve::SepVec;
 
-type MinusVec<T> = SepVec<T, '-'>;
 type PlusVec<T> = SepVec<T, '+'>;
 type MulVec<T> = SepVec<T, '*'>;
 
 fn main() -> Result<(), enve::Error> {
-    enve::sset("E", "10+5*2-3");
+    enve::sset("E", "10+5*2+3");
 
-    let res: f32 = enve::get::<PlusVec<MinusVec<MulVec<f32>>>>("E")
+    let res: f32 = enve::get::<PlusVec<MulVec<f32>>>("E")
         .unwrap()
         .iter()
-        .map(|p| {
-            p.iter()
-                .map(|m| m.iter().product::<f32>())
-                .reduce(|acc, v| acc - v)
-                .unwrap_or_default()
-        })
+        .map(|m| m.iter().product::<f32>())
         .sum::<f32>();
 
-    println!("result: {}", res);
+    assert_eq!(res, 23.0);
+
+    Ok(())
+}
+```
+
+You can also use predefined aggregators if you enable `aggs` feature.
+
+```rust
+use enve::{SepVec, Product, Sum, estring::Aggregate};
+
+type PlusVec<T> = SepVec<T, '+'>;
+type MulVec<T> = SepVec<T, '*'>;
+
+fn main() -> Result<(), enve::Error> {
+    enve::sset("E", "10+5*2+3");
+
+    let res: f32 = enve::get::<Sum<PlusVec<Product<MulVec<f32>>>>>("E")?
+        .agg();
+
+    assert_eq!(res, 23.0);
 
     Ok(())
 }
