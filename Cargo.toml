@@ -27,7 +27,7 @@ bool  = []
 vec = ["structs"]
 
 [dependencies]
-estring = "0.2"
+estring = "0.3"
 
 [badges]
 maintenance = { status = "actively-developed" }
