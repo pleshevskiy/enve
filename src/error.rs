@@ -7,7 +7,33 @@ use estring::EString;
 
 /// The error type for operations interacting with environment variables
 #[derive(Debug)]
-pub enum Error {
+pub struct Error(pub(crate) String, pub(crate) Reason);
+
+impl Error {
+    /// Returns the environment variable name for the failure
+    pub fn var_name(&self) -> &str {
+        &self.0
+    }
+
+    /// Returns the reason for the failure
+    pub fn reason(&self) -> &Reason {
+        &self.1
+    }
+}
+
+impl fmt::Display for Error {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "The environment variable '{}' failed: {}",
+            self.0, self.1
+        )
+    }
+}
+
+/// The reason for the failure to get environment variable
+#[derive(Debug, Clone)]
+pub enum Reason {
     /// The specified environment variable was not present in the current process's environment.
     NotPresent,
 
@@ -20,16 +46,16 @@ pub enum Error {
     Invalid(OsString),
 }
 
-impl fmt::Display for Error {
+impl fmt::Display for Reason {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match &self {
-            Error::NotPresent => f.write_str("The specified env variable was not present"),
-            Error::Invalid(inner) => write!(
+            Reason::NotPresent => f.write_str("The specified env variable was not present"),
+            Reason::Invalid(inner) => write!(
                 f,
                 "The specified env variable was found, but it did not valid: '{:?}'",
                 inner,
             ),
-            Error::Parse(env_name) => {
+            Reason::Parse(env_name) => {
                 write!(f, r#"Failed to parse environment variable "{}""#, env_name)
             }
         }
@@ -38,17 +64,17 @@ impl fmt::Display for Error {
 
 impl error::Error for Error {}
 
-impl From<VarError> for Error {
+impl From<VarError> for Reason {
     fn from(err: VarError) -> Self {
         match err {
-            VarError::NotPresent => Error::NotPresent,
-            VarError::NotUnicode(inner) => Error::Invalid(inner),
+            VarError::NotPresent => Reason::NotPresent,
+            VarError::NotUnicode(inner) => Reason::Invalid(inner),
         }
     }
 }
 
-impl From<estring::Error> for Error {
+impl From<estring::Error> for Reason {
     fn from(err: estring::Error) -> Self {
-        Error::Parse(err.0)
+        Reason::Parse(err.0)
     }
 }

@@ -1,4 +1,4 @@
-use crate::error::Error;
+use crate::error::{Error, Reason};
 use estring::{EString, ParseFragment, ToEString};
 
 /// Fetches the environment variable `key` from the current process. It set value `default`
@@ -25,12 +25,14 @@ use estring::{EString, ParseFragment, ToEString};
 /// }
 /// ```
 #[allow(clippy::needless_pass_by_value)]
-pub fn get_or_set_default<R>(env_name: &str, default: R) -> Result<R, Error>
+pub fn get_or_set_default<R>(key: &str, default: R) -> Result<R, Error>
 where
     R: ParseFragment + ToEString,
 {
-    get::<R>(env_name).or_else(|err| match err {
-        Error::NotPresent => sset(env_name, default).parse().map_err(Error::from),
+    get::<R>(key).or_else(|err| match err.reason() {
+        Reason::NotPresent => sset(key, default)
+            .parse()
+            .map_err(|e| Error(key.to_string(), e.into())),
         _ => Err(err),
     })
 }
@@ -64,7 +66,7 @@ pub fn get<R>(key: &str) -> Result<R, Error>
 where
     R: ParseFragment,
 {
-    sget(key).and_then(|v| v.parse().map_err(Error::from))
+    sget(key).and_then(|v| v.parse().map_err(|e| Error(key.to_string(), e.into())))
 }
 
 /// Fetches the environment variable `key` from the current process and returns value as
@@ -90,7 +92,9 @@ where
 /// }
 /// ```
 pub fn sget(key: &str) -> Result<EString, Error> {
-    std::env::var(key).map_err(Error::from).map(EString::from)
+    std::env::var(key)
+        .map_err(|e| Error(key.to_string(), e.into()))
+        .map(EString::from)
 }
 
 /// Sets the environment variable `key` to the value `value` for the currently running
@@ -154,7 +158,7 @@ mod tests {
     fn should_throw_no_present_error() {
         let en = TestCase::<2>.to_string();
         match get::<&str>(&en) {
-            Err(Error::NotPresent) => {}
+            Err(Error(_, Reason::NotPresent)) => {}
             _ => unreachable!(),
         };
     }
@@ -187,7 +191,7 @@ mod tests {
         let en = TestCase::<5>.to_string();
         std::env::set_var(&en, "-10");
         match get::<u32>(&en) {
-            Err(Error::Parse(orig)) => {
+            Err(Error(_, Reason::Parse(orig))) => {
                 assert_eq!(orig, EString::from("-10"));
             }
             _ => unreachable!(),
@@ -283,7 +287,7 @@ mod tests {
         let en = TestCase::<11>.to_string();
         std::env::set_var(&en, "1,2,3,4,5");
         match get::<SepVec<i32, '+'>>(&en) {
-            Err(Error::Parse(orig)) => {
+            Err(Error(_, Reason::Parse(orig))) => {
                 assert_eq!(orig, EString::from("1,2,3,4,5"));
             }
             _ => unreachable!(),

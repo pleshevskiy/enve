@@ -11,11 +11,11 @@ USAGE:
 E=10+10*2-4 cargo run --example calc --all-features
 ";
 
-fn main() -> Result<(), enve::Error> {
+fn main() {
     let res: f32 = enve::get::<Sum<PlusVec<MinusVec<Product<MulVec<f32>>>>>>("E")
         .map_err(|err| {
-            match err {
-                enve::Error::NotPresent => eprintln!("The expression was not found"),
+            match err.reason() {
+                enve::Reason::NotPresent => eprintln!("The expression was not found"),
                 rest => eprintln!("ERROR: {}", rest),
             }
 
@@ -26,8 +26,6 @@ fn main() -> Result<(), enve::Error> {
         .agg();
 
     println!("result: {}", res);
-
-    Ok(())
 }
 
 struct MinusVec<T>(Vec<T>);

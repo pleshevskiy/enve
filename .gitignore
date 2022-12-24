@@ -2,3 +2,6 @@
 
 /target
 
+# direnv
+.direnv/
+.envrc
